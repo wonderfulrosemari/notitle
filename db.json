@@ -1,16 +1,119 @@
 {
-  "books": [
+  "transactions": [
     {
-      "id": "203",
-      "title": "API 연동 체크",
-      "author": "송다은",
-      "price": 30003
+      "id": "tr-1001",
+      "date": "2026-04-01",
+      "type": "income",
+      "asset": "계좌이체",
+      "category": "급여",
+      "amount": 3200000,
+      "memo": "4월 급여",
+      "createdAt": 1743465600000
     },
     {
-      "id": "Dx5k8EsVK8o",
-      "title": "123",
-      "author": "123",
-      "price": 123
+      "id": "tr-1002",
+      "date": "2026-04-02",
+      "type": "expense",
+      "asset": "신용카드",
+      "category": "식비",
+      "amount": 18300,
+      "memo": "점심 식사",
+      "createdAt": 1743552000000
+    },
+    {
+      "id": "tr-1003",
+      "date": "2026-04-03",
+      "type": "expense",
+      "asset": "체크카드",
+      "category": "교통",
+      "amount": 56000,
+      "memo": "주유비",
+      "createdAt": 1743638400000
+    },
+    {
+      "id": "tr-1005",
+      "date": "2026-03-29",
+      "type": "expense",
+      "asset": "현금",
+      "category": "문화",
+      "amount": 45000,
+      "memo": "영화 관람",
+      "createdAt": 1743206400000
+    },
+    {
+      "id": "tr-1006",
+      "date": "2026-03-25",
+      "type": "expense",
+      "asset": "계좌이체",
+      "category": "주거",
+      "amount": 780000,
+      "memo": "관리비 납부",
+      "createdAt": 1742860800000
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-income-1",
+      "name": "급여",
+      "type": "income"
+    },
+    {
+      "id": "cat-income-2",
+      "name": "부수입",
+      "type": "income"
+    },
+    {
+      "id": "cat-income-3",
+      "name": "환급",
+      "type": "income"
+    },
+    {
+      "id": "cat-expense-1",
+      "name": "식비",
+      "type": "expense"
+    },
+    {
+      "id": "cat-expense-2",
+      "name": "교통",
+      "type": "expense"
+    },
+    {
+      "id": "cat-expense-3",
+      "name": "주거",
+      "type": "expense"
+    },
+    {
+      "id": "cat-expense-4",
+      "name": "문화",
+      "type": "expense"
+    },
+    {
+      "id": "cat-expense-5",
+      "name": "의료",
+      "type": "expense"
+    },
+    {
+      "id": "cat-common-1",
+      "name": "기타",
+      "type": "common"
+    }
+  ],
+  "assets": [
+    {
+      "id": "asset-1",
+      "name": "현금"
+    },
+    {
+      "id": "asset-2",
+      "name": "체크카드"
+    },
+    {
+      "id": "asset-3",
+      "name": "신용카드"
+    },
+    {
+      "id": "asset-4",
+      "name": "계좌이체"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

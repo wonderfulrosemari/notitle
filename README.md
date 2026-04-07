@@ -1,46 +1,65 @@
-# KB 스켈레톤 프로젝트 (간단 CRUD + URL 이동)
+# KB 가계부 (PC 대시보드)
 
-팀원이 클론 후 바로 실행하고, URL 이동으로 CRUD를 확인할 수 있게 구성한 버전입니다.
+Vue 3 + Composition API + json-server 기반 가계부 프로젝트입니다.
 
-## 1) 환경 세팅 (복붙용)
+## 실행
 
 ```bash
-git clone https://github.com/wonderfulrosemari/notitle.git
-cd 파일이동
 nvm install
 nvm use
 npm ci
-npm install -g json-server@1.0.0-beta.15
 ```
 
-## 2) 실행
-
-터미널 1 (json-server, 3001 포트):
+터미널 1:
 
 ```bash
 npm run db
 ```
 
-터미널 2 (Vue):
+터미널 2:
 
 ```bash
 npm run dev
 ```
 
-## 3) src 구조
+## Node 버전
 
--   `src/router/index.js`: URL 라우팅 정의
--   `src/views/BookList.vue`: 목록(GET/DELETE)
--   `src/views/AddBook.vue`: 추가/수정(POST/PUT)
--   `src/App.vue`: 상단 네비게이션 + RouterView
+- `.nvmrc`: `20.19.0`
 
-## 4) 현재 기준 버전
+## 데이터 파일 결정 (Day1 확정)
 
--   vue: `3.5.31`
--   axios: `1.14.0`
--   pinia: `3.0.4`
--   vue-router: `4.6.4`
--   vite: `7.3.1`
--   @vitejs/plugin-vue: `6.0.5`
--   vite-plugin-vue-devtools: `8.1.1`
--   json-server: `1.0.0-beta.15`
+`db.json`은 아래 3개 컬렉션을 기본으로 사용합니다.
+
+1. `transactions`: 거래 원장 (핵심 CRUD 대상)
+2. `categories`: 카테고리 기준 정보 (수입/지출 분리)
+3. `assets`: 자산/결제수단 기준 정보
+
+### transactions 스키마
+
+```json
+{
+  "id": "tr-1001",
+  "date": "2026-04-01",
+  "type": "income | expense",
+  "asset": "계좌이체",
+  "category": "급여",
+  "amount": 3200000,
+  "memo": "4월 급여",
+  "createdAt": 1743465600000
+}
+```
+
+### json-server 엔드포인트
+
+- `GET/POST /transactions`
+- `PUT/DELETE /transactions/:id`
+- `GET /categories`
+- `GET /assets`
+
+## 기능 요약
+
+- 수입/지출 거래 기록 (추가/수정/삭제)
+- 기간/유형/카테고리/자산/검색 필터 조회
+- 월 이동 + 이번 달 빠른 이동
+- 합계/수입/지출/여유 요약 카드
+- 다건 선택 삭제
