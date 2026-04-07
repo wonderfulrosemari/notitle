@@ -261,7 +261,7 @@ const openCreate = () => {
   mode.value = 'create'
   editingId.value = ''
   resetForm()
-  formStatus.value = '거래를 추가합니다.'
+  formStatus.value = ''
   isModalOpen.value = true
 }
 
