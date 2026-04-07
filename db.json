@@ -1,0 +1,17 @@
+{
+  "books": [
+    {
+      "id": "203",
+      "title": "API 연동 체크",
+      "author": "송다은",
+      "price": 30003
+    },
+    {
+      "id": "Dx5k8EsVK8o",
+      "title": "123",
+      "author": "123",
+      "price": 123
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
