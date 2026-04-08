@@ -1,19 +1,8 @@
 <template>
   <main class="auth-page">
-    <section class="auth-hero">
-      <p class="auth-eyebrow">KB IT's Your Life</p>
-      <h1>가계부 시작은 로그인부터</h1>
-      <p class="auth-copy">
-        수입과 지출을 한눈에 관리할 수 있도록 첫 화면을 로그인 페이지로 구성했습니다.
-      </p>
-      <ul class="auth-feature-list">
-        <li>이메일과 비밀번호를 입력하는 로그인 화면</li>
-        <li>회원가입 화면으로 이동할 수 있는 동선 제공</li>
-        <li>로그인 후 가계부 메인 화면으로 이동</li>
-      </ul>
-    </section>
+    <p class="auth-page-brand">KB IT'S YOUR LIFE</p>
 
-    <section class="auth-panel">
+    <section class="auth-panel auth-panel-centered">
       <div class="auth-card">
         <div class="auth-card-head">
           <p class="auth-kicker">Login</p>
