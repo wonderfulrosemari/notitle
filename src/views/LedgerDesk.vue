@@ -17,7 +17,7 @@
       <section class="filters">
         <label class="search">
           검색
-          <input v-model="ledger.state.search" type="search" placeholder="메모/분류/자산" />
+          <input v-model="ledger.state.search" type="search" placeholder="메모/카테고리" />
         </label>
       </section>
 
@@ -48,16 +48,31 @@
           <thead>
             <tr>
               <th></th>
-              <th>날짜</th>
-              <th>자산</th>
-              <th>분류</th>
-              <th class="amount-col">금액</th>
-              <th>내용</th>
+              <th>
+                <button class="sort-trigger" type="button" @click="ledger.toggleSort('date')">
+                  날짜 <span class="sort-mark">{{ ledger.sortMark('date') }}</span>
+                </button>
+              </th>
+              <th>
+                <button class="sort-trigger" type="button" @click="ledger.toggleSort('category')">
+                  카테고리 <span class="sort-mark">{{ ledger.sortMark('category') }}</span>
+                </button>
+              </th>
+              <th class="amount-col">
+                <button class="sort-trigger amount-sort" type="button" @click="ledger.toggleSort('amount')">
+                  금액 <span class="sort-mark">{{ ledger.sortMark('amount') }}</span>
+                </button>
+              </th>
+              <th>
+                <button class="sort-trigger" type="button" @click="ledger.toggleSort('memo')">
+                  메모 <span class="sort-mark">{{ ledger.sortMark('memo') }}</span>
+                </button>
+              </th>
               <th>동작</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in ledger.filteredTransactions" :key="item.id">
+            <tr v-for="item in ledger.pagedTransactions" :key="item.id">
               <td>
                 <input
                   type="checkbox"
@@ -66,7 +81,6 @@
                 />
               </td>
               <td>{{ item.date }}</td>
-              <td>{{ item.asset }}</td>
               <td>
                 <span :class="['badge', item.type]">
                   {{ item.type === 'income' ? '수입' : '지출' }}
@@ -82,13 +96,42 @@
                 <button class="table-btn danger" type="button" @click="removeOne(item.id)">삭제</button>
               </td>
             </tr>
-            <tr v-if="ledger.filteredTransactions.length === 0">
-              <td colspan="7" class="empty-row">
+            <tr v-if="ledger.pagedTransactions.length === 0">
+              <td colspan="6" class="empty-row">
                 {{ ledger.loading ? '불러오는 중입니다...' : '데이터가 없습니다.' }}
               </td>
             </tr>
           </tbody>
         </table>
+
+        <div v-if="ledger.totalPages > 1" class="pagination">
+          <button
+            class="page-btn"
+            type="button"
+            :disabled="ledger.state.page === 1"
+            @click="ledger.prevPage"
+          >
+            이전
+          </button>
+          <button
+            v-for="page in ledger.pageNumbers"
+            :key="`page-${page}`"
+            class="page-btn"
+            :class="{ active: page === ledger.state.page }"
+            type="button"
+            @click="ledger.goToPage(page)"
+          >
+            {{ page }}
+          </button>
+          <button
+            class="page-btn"
+            type="button"
+            :disabled="ledger.state.page === ledger.totalPages"
+            @click="ledger.nextPage"
+          >
+            다음
+          </button>
+        </div>
       </section>
     </section>
 
@@ -100,7 +143,6 @@
       <form class="modal-card" @submit.prevent="submitForm">
         <div class="modal-head">
           <h2>{{ mode === 'create' ? '거래 추가' : '거래 수정' }}</h2>
-          <button class="plain-btn" type="button" @click="closeModal">닫기</button>
         </div>
 
         <div class="form-grid">
@@ -116,10 +158,6 @@
             </select>
           </label>
           <label>
-            자산
-            <input v-model="form.asset" type="text" placeholder="예: 체크카드" required />
-          </label>
-          <label>
             카테고리
             <select v-model="form.category">
               <option v-for="category in formCategoryOptions" :key="category" :value="category">
@@ -133,7 +171,7 @@
           </label>
           <label class="full-width">
             메모
-            <input v-model="form.memo" type="text" placeholder="거래 내용 메모" />
+            <input v-model="form.memo" type="text" placeholder="거래 메모" />
           </label>
         </div>
 
@@ -162,7 +200,6 @@ const formStatus = ref('필수값을 입력한 뒤 저장하세요.')
 const form = reactive({
   date: '',
   type: 'expense',
-  asset: '현금',
   category: '식비',
   amount: 0,
   memo: '',
@@ -184,7 +221,6 @@ const resetForm = () => {
   const today = new Date().toISOString().slice(0, 10)
   form.date = today
   form.type = 'expense'
-  form.asset = '현금'
   form.category = '식비'
   form.amount = 0
   form.memo = ''
@@ -203,7 +239,6 @@ const openEdit = (item) => {
   editingId.value = item.id
   form.date = item.date
   form.type = item.type
-  form.asset = item.asset
   form.category = item.category
   form.amount = item.amount
   form.memo = item.memo
@@ -218,10 +253,6 @@ const closeModal = () => {
 const validateForm = () => {
   if (!form.date) {
     formStatus.value = '날짜를 입력하세요.'
-    return false
-  }
-  if (!form.asset.trim()) {
-    formStatus.value = '자산 항목을 입력하세요.'
     return false
   }
   if (!form.category.trim()) {
@@ -241,7 +272,6 @@ const submitForm = async () => {
   const payload = {
     date: form.date,
     type: form.type,
-    asset: form.asset.trim(),
     category: form.category.trim(),
     amount: Number(form.amount),
     memo: form.memo.trim(),
