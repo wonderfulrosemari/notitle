@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
+import DashboardDesk from '../views/DashboardDesk.vue'
 import LedgerDesk from '../views/LedgerDesk.vue'
 import StatsDesk from '../views/StatsDesk.vue'
 import CalendarDesk from '../views/CalendarDesk.vue'
@@ -25,6 +26,14 @@ const routes = [
     },
   },
   {
+    path: '/dashboard',
+    name: 'dashboard-desk',
+    component: DashboardDesk,
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/ledger',
     name: 'ledger-desk',
     component: LedgerDesk,
@@ -36,6 +45,9 @@ const routes = [
     path: '/stats',
     name: 'stats-desk',
     component: StatsDesk,
+    meta: {
+      requiresAuth: true,
+    },
   },
   {
     path: '/calendar',
@@ -73,7 +85,7 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.authPage && auth.isLoggedIn.value) {
-    return '/ledger'
+    return '/dashboard'
   }
 
   return true
