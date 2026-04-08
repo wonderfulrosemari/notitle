@@ -42,9 +42,12 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
+const route = useRoute()
 const router = useRouter()
+const auth = useAuth()
 
 const form = reactive({
   email: '',
@@ -53,13 +56,22 @@ const form = reactive({
 
 const statusMessage = ref('로그인 정보를 입력하고 가계부로 이동하세요.')
 
-function submitLogin() {
+async function submitLogin() {
   if (!form.email.trim() || !form.password.trim()) {
     statusMessage.value = '이메일과 비밀번호를 모두 입력해주세요.'
     return
   }
 
-  statusMessage.value = '로그인 화면에서 가계부 메인으로 이동합니다.'
-  router.push('/ledger')
+  try {
+    await auth.login({
+      email: form.email,
+      password: form.password,
+    })
+
+    statusMessage.value = '로그인되었습니다. 가계부 화면으로 이동합니다.'
+    router.push(route.query.redirect || '/dashboard')
+  } catch (error) {
+    statusMessage.value = error.message
+  }
 }
 </script>

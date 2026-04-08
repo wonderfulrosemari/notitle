@@ -8,7 +8,8 @@
       "category": "급여",
       "amount": 3200000,
       "memo": "4월 급여",
-      "createdAt": 1743465600000
+      "createdAt": 1743465600000,
+      "userId": "G4UtDHpWtds"
     },
     {
       "id": "tr-1002",
@@ -18,7 +19,8 @@
       "category": "식비",
       "amount": 18300,
       "memo": "점심 식사",
-      "createdAt": 1743552000000
+      "createdAt": 1743552000000,
+      "userId": "G4UtDHpWtds"
     },
     {
       "id": "tr-1003",
@@ -28,7 +30,8 @@
       "category": "교통",
       "amount": 56000,
       "memo": "주유비",
-      "createdAt": 1743638400000
+      "createdAt": 1743638400000,
+      "userId": "G4UtDHpWtds"
     },
     {
       "id": "tr-1005",
@@ -38,7 +41,8 @@
       "category": "문화",
       "amount": 45000,
       "memo": "영화 관람",
-      "createdAt": 1743206400000
+      "createdAt": 1743206400000,
+      "userId": "G4UtDHpWtds"
     },
     {
       "id": "tr-1006",
@@ -48,7 +52,8 @@
       "category": "주거",
       "amount": 780000,
       "memo": "관리비 납부",
-      "createdAt": 1742860800000
+      "createdAt": 1742860800000,
+      "userId": "G4UtDHpWtds"
     }
   ],
   "categories": [
@@ -64,7 +69,7 @@
     },
     {
       "id": "cat-income-3",
-      "name": "환급",
+      "name": "상금",
       "type": "income"
     },
     {
@@ -114,6 +119,22 @@
     {
       "id": "asset-4",
       "name": "계좌이체"
+    }
+  ],
+  "users": [
+    {
+      "id": "G4UtDHpWtds",
+      "name": "가나다",
+      "email": "abc@abc.com",
+      "password": "abc",
+      "createdAt": 1775613374077
+    },
+    {
+      "name": "라마바",
+      "email": "def@def.com",
+      "password": "def",
+      "createdAt": 1775615808748,
+      "id": "r-iTeXqyeA0"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
