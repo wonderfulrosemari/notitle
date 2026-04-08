@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { computed, reactive, ref } from 'vue'
+import { useAuth } from './useAuth'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
@@ -7,7 +8,7 @@ const api = axios.create({
 })
 
 const defaultCategories = ['식비', '교통', '주거', '의료', '쇼핑', '문화', '기타']
-const defaultIncomeCategories = ['급여', '부수입', '환급', '용돈', '기타']
+const defaultIncomeCategories = ['급여', '부수입', '상금', '용돈', '기타']
 const defaultAssets = ['현금', '체크카드', '신용카드', '계좌이체']
 
 const pad = (value) => String(value).padStart(2, '0')
@@ -61,9 +62,11 @@ const normalizeTransaction = (item) => ({
   amount: Number(item.amount || 0),
   memo: item.memo || '',
   createdAt: Number(item.createdAt || Date.now()),
+  userId: String(item.userId || ''),
 })
 
 export function useLedger() {
+  const auth = useAuth()
   const today = formatDate(new Date())
 
   const state = reactive({
@@ -82,6 +85,8 @@ export function useLedger() {
   const transactions = ref([])
   const loading = ref(false)
   const statusMessage = ref('데이터를 불러오는 중입니다.')
+
+  const currentUserId = computed(() => auth.state.currentUser?.id || '')
 
   const currentRange = computed(() => {
     if (state.period === 'day') {
@@ -176,13 +181,27 @@ export function useLedger() {
     statusMessage.value = message
   }
 
+  const requireUserId = () => {
+    if (!currentUserId.value) {
+      throw new Error('로그인한 사용자 정보가 없습니다.')
+    }
+
+    return currentUserId.value
+  }
+
   const fetchTransactions = async () => {
     loading.value = true
     try {
-      const response = await api.get('/transactions')
+      const userId = requireUserId()
+      const response = await api.get('/transactions', {
+        params: {
+          userId,
+        },
+      })
       transactions.value = response.data.map(normalizeTransaction)
-      updateStatus(`총 ${transactions.value.length}건 불러왔습니다.`)
+      updateStatus(`총 ${transactions.value.length}건의 내역을 불러왔습니다.`)
     } catch (error) {
+      transactions.value = []
       updateStatus(`조회 실패: ${error.message}`)
     } finally {
       loading.value = false
@@ -191,6 +210,7 @@ export function useLedger() {
   }
 
   const addTransaction = async (payload) => {
+    const userId = requireUserId()
     const request = {
       date: payload.date,
       type: payload.type,
@@ -199,6 +219,7 @@ export function useLedger() {
       amount: Number(payload.amount),
       memo: payload.memo?.trim() || '',
       createdAt: Date.now(),
+      userId,
     }
     const response = await api.post('/transactions', request)
     transactions.value = [normalizeTransaction(response.data), ...transactions.value]
@@ -217,6 +238,7 @@ export function useLedger() {
       category: payload.category,
       amount: Number(payload.amount),
       memo: payload.memo?.trim() || '',
+      userId: target.userId || requireUserId(),
     }
     const response = await api.put(`/transactions/${id}`, request)
     transactions.value = transactions.value.map((item) =>
