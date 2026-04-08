@@ -430,6 +430,28 @@ select {
 
 .app-content {
   min-width: 0;
+  position: relative;
+  padding-top: 68px;
+}
+
+.app-toolbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 18px 0;
+  z-index: 10;
+}
+
+.app-logout-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ffbc00, #f38b1a);
+  color: #1e1604;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .auth-page {
@@ -614,6 +636,95 @@ select {
   overflow: hidden;
 }
 
+.profile-page {
+  min-height: calc(100vh - 68px);
+  display: grid;
+  place-items: start center;
+  padding: 40px 20px 20px;
+}
+
+.profile-card {
+  width: min(520px, calc(100vw - 240px));
+  border: 1px solid #3a4256;
+  border-radius: 34px;
+  background: #132c48;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.28);
+  padding: 26px 24px 22px;
+}
+
+.profile-card-head h1 {
+  margin: 0;
+  color: #eef3ff;
+  font-size: 18px;
+}
+
+.profile-info-list {
+  margin: 22px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.profile-info-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 14px;
+  align-items: center;
+  color: #eef3ff;
+  font-size: 13px;
+}
+
+.profile-info-row dt {
+  font-weight: 700;
+}
+
+.profile-info-row dd {
+  margin: 0;
+  color: #f6f7fb;
+}
+
+.profile-divider {
+  height: 1px;
+  margin: 18px 0 16px;
+  background: rgba(232, 238, 252, 0.24);
+}
+
+.profile-form {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-field {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 14px;
+  align-items: center;
+  color: #eef3ff;
+  font-size: 13px;
+}
+
+.profile-field input {
+  width: 100%;
+  border: 1px solid #0b1f34;
+  border-radius: 7px;
+  padding: 10px 12px;
+  color: #eef3ff;
+  background: #11253c;
+}
+
+.profile-status {
+  min-height: 18px;
+  margin: 4px 0 0;
+  color: #ffcb75;
+  font-size: 12px;
+}
+
+.profile-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .calendar-top {
   display: flex;
   justify-content: space-between;
@@ -713,6 +824,14 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .app-content {
+    padding-top: 74px;
+  }
+
+  .app-toolbar {
+    padding: 12px 12px 0;
+  }
+
   .auth-page {
     grid-template-columns: 1fr;
   }
@@ -780,6 +899,22 @@ select {
   .calendar-top {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .profile-page {
+    padding: 18px 12px 12px;
+  }
+
+  .profile-card {
+    width: 100%;
+    border-radius: 26px;
+    padding: 22px 18px 18px;
+  }
+
+  .profile-field,
+  .profile-info-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .calendar-grid-wrap {
