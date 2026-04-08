@@ -65,15 +65,23 @@ const routes = [
       requiresAuth: true,
     },
   },
-]
+  {
+    path: '/setting',
+    name: 'setting-desk',
+    component: () => import('../views/SettingDesk.vue'),
+    meta: {
+      requiresAuth: true,
+    },
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-})
+});
 
 router.beforeEach((to) => {
-  const auth = useAuth()
+  const auth = useAuth();
 
   if (to.meta.requiresAuth && !auth.isLoggedIn.value) {
     return {
@@ -81,14 +89,14 @@ router.beforeEach((to) => {
       query: {
         redirect: to.fullPath,
       },
-    }
+    };
   }
 
   if (to.meta.authPage && auth.isLoggedIn.value) {
     return '/dashboard'
   }
 
-  return true
-})
+  return true;
+});
 
 export default router
