@@ -36,6 +36,9 @@ const routes = [
     path: '/stats',
     name: 'stats-desk',
     component: StatsDesk,
+    meta: {
+      requiresAuth: true,
+    },
   },
   {
     path: '/calendar',

@@ -23,6 +23,10 @@
     </aside>
 
     <section class="app-content">
+      <header class="app-toolbar">
+        <button class="app-logout-btn" type="button" @click="handleLogout">로그아웃</button>
+      </header>
+
       <RouterView />
     </section>
   </div>
@@ -32,9 +36,17 @@
 
 <script setup>
 import { computed } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useAuth } from './composables/useAuth'
 
 const route = useRoute()
+const router = useRouter()
+const auth = useAuth()
 
 const showAppShell = computed(() => !route.meta.authPage)
+
+function handleLogout() {
+  auth.logout()
+  router.push('/')
+}
 </script>

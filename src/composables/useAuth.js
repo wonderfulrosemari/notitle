@@ -92,6 +92,27 @@ export function useAuth() {
     return user
   }
 
+  const updatePassword = async (nextPassword) => {
+    if (!state.currentUser?.id) {
+      throw new Error('로그인한 사용자 정보가 없습니다.')
+    }
+
+    const trimmedPassword = nextPassword.trim()
+    if (!trimmedPassword) {
+      throw new Error('새 비밀번호를 입력해주세요.')
+    }
+
+    const request = {
+      ...state.currentUser,
+      password: trimmedPassword,
+    }
+
+    const response = await api.put(`/users/${state.currentUser.id}`, request)
+    const user = normalizeUser(response.data)
+    persistUser(user)
+    return user
+  }
+
   const logout = () => {
     persistUser(null)
   }
@@ -101,6 +122,7 @@ export function useAuth() {
     isLoggedIn,
     signup,
     login,
+    updatePassword,
     logout,
   }
 }
