@@ -247,6 +247,10 @@ export function useLedger() {
         statusMessage.value = message;
     };
 
+    const updateRangeCountStatus = () => {
+        updateStatus(`총 ${scopedByRange.value.length}건의 내역을 불러왔습니다.`);
+    };
+
     const requireUserId = () => {
         if (!currentUserId.value) {
             throw new Error('로그인한 사용자 정보가 없습니다.');
@@ -266,7 +270,7 @@ export function useLedger() {
             });
             transactions.value = response.data.map(normalizeTransaction);
             state.page = 1;
-            updateStatus(`총 ${transactions.value.length}건의 내역을 불러왔습니다.`);
+            updateRangeCountStatus();
         } catch (error) {
             transactions.value = [];
             updateStatus(`조회 실패: ${error.message}`);
@@ -290,7 +294,7 @@ export function useLedger() {
         const response = await api.post('/transactions', request);
         transactions.value = [normalizeTransaction(response.data), ...transactions.value];
         state.page = 1;
-        updateStatus('거래를 추가했습니다.');
+        updateRangeCountStatus();
     };
 
     const updateTransaction = async (id, payload) => {
@@ -310,14 +314,14 @@ export function useLedger() {
         transactions.value = transactions.value.map((item) =>
             item.id === id ? normalizeTransaction(response.data) : item
         );
-        updateStatus('거래를 수정했습니다.');
+        updateRangeCountStatus();
     };
 
     const removeTransaction = async (id) => {
         await api.delete(`/transactions/${id}`);
         transactions.value = transactions.value.filter((item) => item.id !== id);
         state.selectedIds = state.selectedIds.filter((selectedId) => selectedId !== id);
-        updateStatus('거래를 삭제했습니다.');
+        updateRangeCountStatus();
     };
 
     const removeSelected = async () => {
@@ -326,7 +330,7 @@ export function useLedger() {
         await Promise.all(ids.map((id) => api.delete(`/transactions/${id}`)));
         transactions.value = transactions.value.filter((item) => !ids.includes(item.id));
         clearSelection();
-        updateStatus('선택한 거래를 삭제했습니다.');
+        updateRangeCountStatus();
     };
 
     const moveMonth = (offset) => {
@@ -351,6 +355,15 @@ export function useLedger() {
         ],
         () => {
             state.page = 1;
+        }
+    );
+
+    watch(
+        () => [state.monthCursor, state.anchorDate, state.period, state.customFrom, state.customTo],
+        () => {
+            if (loading.value) return;
+            if (statusMessage.value.startsWith('조회 실패:')) return;
+            updateRangeCountStatus();
         }
     );
 
