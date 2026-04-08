@@ -435,19 +435,16 @@ select {
 }
 
 .app-toolbar {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
-  left: 160px;
   display: flex;
   justify-content: flex-end;
   padding: 14px 18px 0;
   z-index: 10;
-  pointer-events: none;
 }
 
 .app-logout-btn {
-  pointer-events: auto;
   border: 0;
   border-radius: 12px;
   padding: 10px 16px;
@@ -832,7 +829,6 @@ select {
   }
 
   .app-toolbar {
-    left: 0;
     padding: 12px 12px 0;
   }
 
