@@ -15,16 +15,16 @@
         </article>
         <article class="metric">
           <p>수입</p>
-          <strong class="income">{{ formatNumber(ledger.summary.income) }}</strong>
+          <strong class="income">{{ formatWon(ledger.summary.income) }}</strong>
         </article>
         <article class="metric">
           <p>지출</p>
-          <strong class="expense">{{ formatNumber(ledger.summary.expense) }}</strong>
+          <strong class="expense">{{ formatWon(ledger.summary.expense) }}</strong>
         </article>
         <article class="metric">
           <p>여유</p>
           <strong :class="ledger.summary.balance >= 0 ? 'income' : 'expense'">
-            {{ formatNumber(ledger.summary.balance) }}
+            {{ formatWon(ledger.summary.balance) }}
           </strong>
         </article>
       </section>
@@ -39,16 +39,14 @@
           <thead>
             <tr>
               <th>날짜</th>
-              <th>자산</th>
-              <th>분류</th>
+              <th>카테고리</th>
               <th class="amount-col">금액</th>
-              <th>내용</th>
+              <th>메모</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="item in recentTransactions" :key="item.id">
               <td>{{ item.date }}</td>
-              <td>{{ item.asset }}</td>
               <td>
                 <span :class="['badge', item.type]">
                   {{ item.type === 'income' ? '수입' : '지출' }}
@@ -56,12 +54,12 @@
                 {{ item.category }}
               </td>
               <td class="amount-col" :class="item.type">
-                {{ item.type === 'income' ? '+' : '-' }}{{ formatNumber(item.amount) }}
+                {{ item.type === 'income' ? '+' : '-' }}{{ formatWon(item.amount) }}
               </td>
               <td>{{ item.memo || '-' }}</td>
             </tr>
             <tr v-if="recentTransactions.length === 0">
-              <td colspan="5" class="empty-row">
+              <td colspan="4" class="empty-row">
                 {{ ledger.loading ? '불러오는 중입니다...' : '데이터가 없습니다.' }}
               </td>
             </tr>
@@ -90,6 +88,8 @@ const formatNumber = (value) =>
   new Intl.NumberFormat('ko-KR', {
     maximumFractionDigits: 0,
   }).format(value || 0)
+
+const formatWon = (value) => `${formatNumber(value)}원`
 
 onMounted(async () => {
   await ledger.fetchTransactions()
