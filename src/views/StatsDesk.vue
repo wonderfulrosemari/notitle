@@ -4,14 +4,14 @@
       <div class="stats-header">
         <div>
           <h1>통계</h1>
-          <p>월별 수입과 지출 흐름을 확인할 수 있습니다.</p>
+          <p>연도별 지출 흐름과 카테고리 비율을 확인할 수 있습니다.</p>
         </div>
 
         <div class="month-controls">
           <button class="nav-btn" @click="selectedYear--">&lt;</button>
-          <div class="month-box">{{ selectedYear }}</div>
+          <div class="month-box">{{ selectedYear }}년</div>
           <button class="nav-btn" @click="selectedYear++">&gt;</button>
-          <button class="current-btn" @click="goCurrentYear">이번 달</button>
+          <button class="current-btn" @click="goCurrentYear">이번 연도</button>
         </div>
       </div>
 
@@ -32,7 +32,7 @@
 
       <div class="chart-section">
         <div class="chart-box">
-          <h2>월별 수입/지출 선 그래프</h2>
+          <h2>월별 지출 선 그래프</h2>
           <div class="real-chart-area">
             <Line :data="lineChartData" :options="lineChartOptions" />
           </div>
@@ -77,7 +77,7 @@ ChartJS.register(
 )
 
 const API_BASE = 'http://localhost:3000'
-const budgetList = ref([])
+const transactions = ref([])
 const selectedYear = ref(new Date().getFullYear())
 
 const monthLabels = [
@@ -96,21 +96,23 @@ const pieColors = [
   '#f472b6'
 ]
 
-const loadBudget = async () => {
+const loadTransactions = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/budget`)
-    budgetList.value = Array.isArray(response.data) ? response.data : []
+    const response = await axios.get(`${API_BASE}/transactions`)
+    transactions.value = Array.isArray(response.data) ? response.data : []
   } catch (error) {
-    console.error('budget 데이터를 불러오지 못했습니다.', error)
-    budgetList.value = []
+    console.error('transactions 데이터를 불러오지 못했습니다.', error)
+    transactions.value = []
   }
 }
 
 const currentYearRows = computed(() => {
-  return budgetList.value.filter((item) => {
+  return transactions.value.filter((item) => {
     if (!item?.date) return false
+
     const date = new Date(item.date)
     if (Number.isNaN(date.getTime())) return false
+
     return date.getFullYear() === selectedYear.value
   })
 })
@@ -145,17 +147,6 @@ const netIncome = computed(() => {
   return totalIncome.value - totalExpense.value
 })
 
-const monthlyIncomeTotals = computed(() => {
-  const totals = Array(12).fill(0)
-
-  currentYearIncomeRows.value.forEach((item) => {
-    const monthIndex = new Date(item.date).getMonth()
-    totals[monthIndex] += Number(item.amount) || 0
-  })
-
-  return totals
-})
-
 const monthlyExpenseTotals = computed(() => {
   const totals = Array(12).fill(0)
 
@@ -187,17 +178,6 @@ const lineChartData = computed(() => {
     labels: monthLabels,
     datasets: [
       {
-        label: '수입',
-        data: monthlyIncomeTotals.value,
-        borderColor: '#69b8ff',
-        backgroundColor: '#69b8ff',
-        pointBackgroundColor: '#69b8ff',
-        pointBorderColor: '#69b8ff',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        tension: 0.35
-      },
-      {
         label: '지출',
         data: monthlyExpenseTotals.value,
         borderColor: '#ff7c8e',
@@ -206,7 +186,8 @@ const lineChartData = computed(() => {
         pointBorderColor: '#ff7c8e',
         pointRadius: 4,
         pointHoverRadius: 6,
-        tension: 0.35
+        tension: 0.35,
+        fill: false
       }
     ]
   }
@@ -237,7 +218,7 @@ const lineChartOptions = {
     tooltip: {
       callbacks: {
         label(context) {
-          return `${context.dataset.label}: ${Number(context.raw).toLocaleString()}원`
+          return `지출: ${Number(context.raw).toLocaleString()}원`
         }
       }
     }
@@ -294,7 +275,7 @@ const goCurrentYear = () => {
 }
 
 onMounted(() => {
-  loadBudget()
+  loadTransactions()
 })
 </script>
 
@@ -415,6 +396,7 @@ onMounted(() => {
 }
 
 .real-chart-area {
+  position: relative;
   height: 320px;
 }
 
