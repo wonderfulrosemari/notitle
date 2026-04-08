@@ -855,8 +855,8 @@ select {
 }
 
 .day-cell.has-data {
-  background: #612525;
-  box-shadow: inset 0 0 0 2px #cc5151;
+  background: linear-gradient(180deg, #15243a 0%, #101b2c 100%);
+  box-shadow: inset 0 0 0 2px #35527a;
 }
 
 .day-cell.today {
@@ -864,7 +864,7 @@ select {
 }
 
 .day-cell.has-data.today {
-  box-shadow: inset 0 0 0 2px #ff8686;
+  box-shadow: inset 0 0 0 2px #8bb8ff;
 }
 
 .day-head {
@@ -885,17 +885,17 @@ select {
 }
 
 .amount-list .income {
-  color: #ff8d7e;
+  color: #61dfba;
 }
 
 .amount-list .expense {
-  color: #f4f4f4;
+  color: #ff99a6;
 }
 
 .amount-list .balance {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid rgba(219, 226, 242, 0.38);
+  border-top: 1px solid rgba(157, 177, 212, 0.4);
   font-weight: 700;
 }
 
