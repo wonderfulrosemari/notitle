@@ -183,6 +183,25 @@
         </div>
       </form>
     </section>
+
+    <section v-if="isConfirmOpen" class="modal-root" @click.self="closeConfirmDialog">
+      <div class="modal-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="modal-head">
+          <h2 id="confirm-title">{{ confirmTitle }}</h2>
+        </div>
+
+        <p class="confirm-message">{{ confirmMessage }}</p>
+
+        <div class="modal-actions">
+          <button class="plain-btn" type="button" :disabled="confirmLoading" @click="closeConfirmDialog">
+            취소
+          </button>
+          <button class="danger-btn" type="button" :disabled="confirmLoading" @click="runConfirmAction">
+            {{ confirmLoading ? '삭제 중...' : '삭제' }}
+          </button>
+        </div>
+      </div>
+    </section>
   </main>
 </template>
 
@@ -195,7 +214,13 @@ const ledger = useLedger()
 const mode = ref('create')
 const editingId = ref('')
 const isModalOpen = ref(false)
+const isConfirmOpen = ref(false)
+const confirmTitle = ref('삭제 확인')
+const confirmMessage = ref('')
+const confirmLoading = ref(false)
 const formStatus = ref('필수값을 입력한 뒤 저장하세요.')
+
+let pendingConfirmAction = null
 
 const form = reactive({
   date: '',
@@ -250,6 +275,41 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
+const openConfirmDialog = ({ title = '삭제 확인', message, onConfirm }) => {
+  confirmTitle.value = title
+  confirmMessage.value = message
+  pendingConfirmAction = onConfirm
+  isConfirmOpen.value = true
+}
+
+const closeConfirmDialog = () => {
+  if (confirmLoading.value) return
+  isConfirmOpen.value = false
+  confirmTitle.value = '삭제 확인'
+  confirmMessage.value = ''
+  pendingConfirmAction = null
+}
+
+const runConfirmAction = async () => {
+  if (!pendingConfirmAction) {
+    closeConfirmDialog()
+    return
+  }
+
+  confirmLoading.value = true
+  let shouldClose = true
+
+  try {
+    shouldClose = (await pendingConfirmAction()) !== false
+  } finally {
+    confirmLoading.value = false
+  }
+
+  if (shouldClose && isConfirmOpen.value) {
+    closeConfirmDialog()
+  }
+}
+
 const validateForm = () => {
   if (!form.date) {
     formStatus.value = '날짜를 입력하세요.'
@@ -289,20 +349,37 @@ const submitForm = async () => {
   }
 }
 
-const removeOne = async (id) => {
-  try {
-    await ledger.removeTransaction(id)
-  } catch (error) {
-    formStatus.value = `삭제 실패: ${error.message}`
-  }
+const removeOne = (id) => {
+  openConfirmDialog({
+    message: '이 내역을 삭제할까요?',
+    onConfirm: async () => {
+      try {
+        await ledger.removeTransaction(id)
+        return true
+      } catch (error) {
+        formStatus.value = `삭제 실패: ${error.message}`
+        return false
+      }
+    },
+  })
 }
 
-const removeSelected = async () => {
-  try {
-    await ledger.removeSelected()
-  } catch (error) {
-    formStatus.value = `선택 삭제 실패: ${error.message}`
-  }
+const removeSelected = () => {
+  const count = ledger.selectedCount
+  if (count === 0) return
+
+  openConfirmDialog({
+    message: `선택한 ${count}건을 삭제할까요?`,
+    onConfirm: async () => {
+      try {
+        await ledger.removeSelected()
+        return true
+      } catch (error) {
+        formStatus.value = `선택 삭제 실패: ${error.message}`
+        return false
+      }
+    },
+  })
 }
 
 const formatCurrency = (value) =>
