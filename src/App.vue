@@ -19,6 +19,10 @@
           <span class="menu-icon">P</span>
           <span>프로필</span>
         </RouterLink>
+        <RouterLink to="/setting" class="menu-item">
+          <span class="menu-icon">S</span>
+          <span>설정</span>
+        </RouterLink>
       </nav>
     </aside>
 
@@ -31,10 +35,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { computed } from 'vue';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
 
-const route = useRoute()
+const route = useRoute();
 
-const showAppShell = computed(() => !route.meta.authPage)
+const showAppShell = computed(() => !route.meta.authPage);
 </script>
