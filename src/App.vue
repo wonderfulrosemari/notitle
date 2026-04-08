@@ -3,6 +3,10 @@
     <aside class="side-nav">
       <p class="brand-title">KB 가계부</p>
       <nav class="menu-list">
+        <RouterLink to="/dashboard" class="menu-item">
+          <span class="menu-icon">D</span>
+          <span>대시보드</span>
+        </RouterLink>
         <RouterLink to="/ledger" class="menu-item">
           <span class="menu-icon">L</span>
           <span>내역</span>
