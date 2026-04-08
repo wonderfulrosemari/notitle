@@ -1333,3 +1333,52 @@ select {
 .stats-summary-cards {
   border-top: none;
 }
+
+body.theme-kb .stats-panel {
+  border-color: var(--border-color);
+  background: var(--bg-main);
+}
+
+body.theme-kb .stats-panel-head {
+  border-bottom: 1px solid var(--border-light);
+}
+
+body.theme-kb .stats-panel-head h3 {
+  color: var(--text-title);
+}
+
+body.theme-kb .stats-pie-legend-row,
+body.theme-kb .stats-detail-row {
+  border-color: var(--border-color);
+  background: var(--bg-sub);
+  color: var(--text-main);
+}
+
+body.theme-kb .stats-pie-legend-row:hover,
+body.theme-kb .stats-detail-row:hover {
+  background: var(--bg-hover);
+}
+
+body.theme-kb .stats-pie-legend-row.active,
+body.theme-kb .stats-detail-row.active {
+  border-color: var(--point-color);
+  box-shadow: inset 0 0 0 1px rgba(255, 188, 0, 0.25);
+  background: rgba(255, 188, 0, 0.08);
+}
+
+body.theme-kb .stats-select {
+  border-color: var(--border-color);
+  color: var(--text-title);
+  background: var(--bg-sub);
+}
+
+body.theme-kb .stats-pie-label,
+body.theme-kb .stats-detail-text strong,
+body.theme-kb .stats-detail-amount {
+  color: var(--text-title);
+}
+
+body.theme-kb .stats-detail-text span,
+body.theme-kb .stats-empty {
+  color: var(--text-sub);
+}
