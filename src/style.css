@@ -207,22 +207,32 @@ select {
 .ledger-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ledger-table col.select-col {
+  width: 56px;
+}
+
+.ledger-table col.main-col {
+  width: calc((100% - 56px) / 5);
 }
 
 .ledger-table thead th {
-  padding: 10px 12px;
+  padding: 14px 16px;
   border-top: 1px solid #2a3140;
   border-bottom: 1px solid #2a3140;
   color: #8f98ad;
   font-weight: 500;
   font-size: 12px;
   background: #101721;
-  text-align: left;
+  text-align: center;
 }
 
 .sort-trigger {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border: 0;
   padding: 0;
@@ -241,15 +251,13 @@ select {
   font-size: 11px;
 }
 
-.amount-sort {
-  margin-left: auto;
-}
-
 .ledger-table tbody td {
-  padding: 9px 12px;
+  padding: 18px 16px;
   border-bottom: 1px solid #252d3f;
   font-size: 13px;
   color: #d8dded;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .ledger-table tbody tr:hover {
@@ -259,7 +267,6 @@ select {
 .badge {
   display: inline-block;
   min-width: 34px;
-  margin-right: 8px;
   padding: 2px 5px;
   border-radius: 999px;
   font-size: 11px;
@@ -276,13 +283,33 @@ select {
   color: #ff93a1;
 }
 
+.select-col {
+  text-align: center;
+}
+
+.date-col,
+.category-col,
+.amount-col,
+.memo-col,
+.actions-col {
+  text-align: center;
+}
+
 .amount-col {
-  text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.category-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
 }
 
 .actions {
   display: flex;
+  justify-content: center;
   gap: 6px;
 }
 
