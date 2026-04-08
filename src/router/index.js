@@ -3,6 +3,7 @@ import { useAuth } from '../composables/useAuth'
 import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
 import LedgerDesk from '../views/LedgerDesk.vue'
+import StatsDesk from '../views/StatsDesk.vue'
 import CalendarDesk from '../views/CalendarDesk.vue'
 import ProfileDesk from '../views/ProfileDesk.vue'
 
@@ -30,6 +31,11 @@ const routes = [
     meta: {
       requiresAuth: true,
     },
+  },
+  {
+    path: '/stats',
+    name: 'stats-desk',
+    component: StatsDesk,
   },
   {
     path: '/calendar',
