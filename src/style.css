@@ -1213,3 +1213,11 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+.dashboard-summary-cards {
+  border-top: none;
+}
+
+.stats-summary-cards {
+  border-top: none;
+}
