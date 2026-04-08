@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LedgerDesk from '../views/LedgerDesk.vue'
 import CalendarDesk from '../views/CalendarDesk.vue'
+import ProfileDesk from '../views/ProfileDesk.vue'
 
 const routes = [
   {
@@ -16,6 +17,11 @@ const routes = [
     path: '/calendar',
     name: 'calendar-desk',
     component: CalendarDesk,
+  },
+  {
+    path: '/profile',
+    name: 'profile-desk',
+    component: ProfileDesk,
   },
 ]
 

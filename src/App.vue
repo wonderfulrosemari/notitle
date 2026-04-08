@@ -11,6 +11,10 @@
           <span class="menu-icon">◷</span>
           <span>캘린더</span>
         </RouterLink>
+        <RouterLink to="/profile" class="menu-item">
+          <span class="menu-icon">◎</span>
+          <span>프로필</span>
+        </RouterLink>
       </nav>
     </aside>
 
