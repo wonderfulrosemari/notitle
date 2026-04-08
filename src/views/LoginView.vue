@@ -69,7 +69,7 @@ async function submitLogin() {
     })
 
     statusMessage.value = '로그인되었습니다. 가계부 화면으로 이동합니다.'
-    router.push(route.query.redirect || '/ledger')
+    router.push(route.query.redirect || '/dashboard')
   } catch (error) {
     statusMessage.value = error.message
   }

@@ -11,80 +11,14 @@
           <button class="icon-btn" type="button" @click="ledger.moveMonth(-1)">&#60;</button>
           <div class="month-chip">{{ monthLabel }}</div>
           <button class="icon-btn" type="button" @click="ledger.moveMonth(1)">&#62;</button>
-          <button class="plain-btn" type="button" @click="ledger.focusCurrentMonth">이번 달</button>
         </div>
       </header>
 
       <section class="filters">
-        <label>
-          기간
-          <select v-model="ledger.state.period">
-            <option value="day">일별</option>
-            <option value="week">주간</option>
-            <option value="month">월별</option>
-            <option value="custom">기간별</option>
-          </select>
-        </label>
-        <label v-if="ledger.state.period === 'custom'">
-          시작일
-          <input v-model="ledger.state.customFrom" type="date" />
-        </label>
-        <label v-if="ledger.state.period === 'custom'">
-          종료일
-          <input v-model="ledger.state.customTo" type="date" />
-        </label>
-        <label>
-          분류
-          <select v-model="ledger.state.type">
-            <option value="all">전체</option>
-            <option value="income">수입</option>
-            <option value="expense">지출</option>
-          </select>
-        </label>
-        <label>
-          카테고리
-          <select v-model="ledger.state.category">
-            <option value="all">전체</option>
-            <option v-for="category in ledger.categoryOptions" :key="category" :value="category">
-              {{ category }}
-            </option>
-          </select>
-        </label>
-        <label>
-          자산
-          <select v-model="ledger.state.asset">
-            <option value="all">전체</option>
-            <option v-for="asset in ledger.assetOptions" :key="asset" :value="asset">
-              {{ asset }}
-            </option>
-          </select>
-        </label>
         <label class="search">
           검색
           <input v-model="ledger.state.search" type="search" placeholder="메모/분류/자산" />
         </label>
-        <button class="plain-btn" type="button" @click="ledger.fetchTransactions">새로고침</button>
-      </section>
-
-      <section class="summary-cards">
-        <article class="metric">
-          <p>전체 ({{ ledger.filteredTransactions.length }})</p>
-          <strong>{{ formatCurrency(ledger.summary.total) }}</strong>
-        </article>
-        <article class="metric">
-          <p>수입</p>
-          <strong class="income">{{ formatCurrency(ledger.summary.income) }}</strong>
-        </article>
-        <article class="metric">
-          <p>지출</p>
-          <strong class="expense">{{ formatCurrency(ledger.summary.expense) }}</strong>
-        </article>
-        <article class="metric">
-          <p>여유</p>
-          <strong :class="ledger.summary.balance >= 0 ? 'income' : 'expense'">
-            {{ formatCurrency(ledger.summary.balance) }}
-          </strong>
-        </article>
       </section>
 
       <section class="table-zone">
@@ -159,7 +93,6 @@
     </section>
 
     <div class="fab-stack">
-      <button class="fab small" type="button" @click="ledger.fetchTransactions">R</button>
       <button class="fab primary" type="button" @click="openCreate">+</button>
     </div>
 
