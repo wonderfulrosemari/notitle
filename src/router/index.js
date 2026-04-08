@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
 import LedgerDesk from '../views/LedgerDesk.vue'
+import StatsDesk from '../views/StatsDesk.vue'
 import CalendarDesk from '../views/CalendarDesk.vue'
 import ProfileDesk from '../views/ProfileDesk.vue'
 
@@ -26,6 +27,11 @@ const routes = [
     path: '/ledger',
     name: 'ledger-desk',
     component: LedgerDesk,
+  },
+  {
+    path: '/stats',
+    name: 'stats-desk',
+    component: StatsDesk,
   },
   {
     path: '/calendar',
