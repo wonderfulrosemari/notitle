@@ -26,7 +26,7 @@
               <div class="amount-list">
                 <p class="income" v-if="cell.income > 0">+{{ formatAmount(cell.income) }}</p>
                 <p class="expense" v-if="cell.expense > 0">-{{ formatAmount(cell.expense) }}</p>
-                <p class="balance" :class="cell.balance >= 0 ? 'income' : 'expense'">
+                <p v-if="cell.hasData" class="balance" :class="cell.balance >= 0 ? 'income' : 'expense'">
                   {{ cell.balance >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(cell.balance)) }}
                 </p>
               </div>
