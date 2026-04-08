@@ -15,7 +15,7 @@
         </div>
       </header>
 
-      <section class="summary-cards">
+      <section class="summary-cards stats-summary-cards">
         <article class="metric">
           <p>전체 ({{ monthTransactions.length }})</p>
           <strong>{{ formatWon(monthSummary.total) }}</strong>
