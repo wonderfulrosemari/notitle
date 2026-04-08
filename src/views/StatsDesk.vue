@@ -39,7 +39,7 @@
       <section class="stats-grid">
         <article class="stats-panel stats-panel-wide">
           <div class="stats-panel-head">
-            <h3>{{ selectedYear }}년 월별 수입 / 지출 추이</h3>
+            <h3>{{ selectedYear }}년 월별 지출 추이</h3>
           </div>
 
           <div class="stats-chart-box stats-line-box">
@@ -52,14 +52,14 @@
             <h3>{{ monthLabel }} 지출 카테고리 비율</h3>
           </div>
 
-          <div v-if="categoryBreakdown.length > 0" class="stats-pie-layout">
+          <div v-if="topCategoryBreakdown.length > 0" class="stats-pie-layout">
             <div class="stats-pie-canvas">
               <Pie :data="pieChartData" :options="pieChartOptions" />
             </div>
 
             <div class="stats-pie-legend">
               <button
-                v-for="item in categoryBreakdown"
+                v-for="item in topCategoryBreakdown"
                 :key="item.category"
                 type="button"
                 class="stats-pie-legend-row"
@@ -73,7 +73,7 @@
                   ></span>
                   <span class="stats-pie-label">{{ item.category }}</span>
                 </div>
-                <strong>{{ item.percent }}%</strong>
+                <strong>{{ item.topPercent }}%</strong>
               </button>
             </div>
           </div>
@@ -262,6 +262,18 @@ const categoryBreakdown = computed(() => {
     }))
 })
 
+const topCategoryBreakdown = computed(() => {
+  const top3 = categoryBreakdown.value.slice(0, 3)
+  const top3Total = top3.reduce((sum, item) => sum + item.amount, 0)
+
+  return top3.map((item) => ({
+    ...item,
+    topPercent: top3Total === 0
+      ? 0
+      : Number(((item.amount / top3Total) * 100).toFixed(1))
+  }))
+})
+
 const detailRows = computed(() => {
   if (selectedCategory.value === 'all') {
     return categoryBreakdown.value
@@ -270,24 +282,6 @@ const detailRows = computed(() => {
   return categoryBreakdown.value.filter(
     (item) => item.category === selectedCategory.value
   )
-})
-
-const yearlyIncomeTotals = computed(() => {
-  const totals = Array(12).fill(0)
-
-  allTransactions.value.forEach((item) => {
-    if (!item?.date) return
-
-    const date = new Date(item.date)
-    if (Number.isNaN(date.getTime())) return
-    if (date.getFullYear() !== selectedYear.value) return
-    if (String(item.type).toLowerCase() !== 'income') return
-
-    const monthIndex = date.getMonth()
-    totals[monthIndex] += Number(item.amount) || 0
-  })
-
-  return totals
 })
 
 const yearlyExpenseTotals = computed(() => {
@@ -313,18 +307,6 @@ const lineChartData = computed(() => {
     labels: monthLabels,
     datasets: [
       {
-        label: '수입',
-        data: yearlyIncomeTotals.value,
-        borderColor: '#69b8ff',
-        backgroundColor: '#69b8ff',
-        pointBackgroundColor: '#69b8ff',
-        pointBorderColor: '#69b8ff',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        tension: 0.35,
-        fill: false
-      },
-      {
         label: '지출',
         data: yearlyExpenseTotals.value,
         borderColor: '#ff7c8e',
@@ -342,18 +324,18 @@ const lineChartData = computed(() => {
 
 const pieChartData = computed(() => {
   return {
-    labels: categoryBreakdown.value.map((item) => item.category),
+    labels: topCategoryBreakdown.value.map((item) => item.category),
     datasets: [
       {
-        data: categoryBreakdown.value.map((item) => item.amount),
-        backgroundColor: categoryBreakdown.value.map((item) => item.color),
-        borderColor: categoryBreakdown.value.map((item) =>
+        data: topCategoryBreakdown.value.map((item) => item.amount),
+        backgroundColor: topCategoryBreakdown.value.map((item) => item.color),
+        borderColor: topCategoryBreakdown.value.map((item) =>
           selectedCategory.value === item.category ? '#ffffff' : '#111621'
         ),
-        borderWidth: categoryBreakdown.value.map((item) =>
+        borderWidth: topCategoryBreakdown.value.map((item) =>
           selectedCategory.value === item.category ? 3 : 0
         ),
-        offset: categoryBreakdown.value.map((item) =>
+        offset: topCategoryBreakdown.value.map((item) =>
           selectedCategory.value === item.category ? 12 : 0
         )
       }
@@ -412,7 +394,7 @@ const pieChartOptions = {
       callbacks: {
         label(context) {
           const raw = Number(context.raw || 0)
-          const total = categoryBreakdown.value.reduce(
+          const total = topCategoryBreakdown.value.reduce(
             (sum, item) => sum + item.amount,
             0
           )
@@ -426,7 +408,7 @@ const pieChartOptions = {
     if (!elements.length) return
 
     const index = elements[0].index
-    const target = categoryBreakdown.value[index]
+    const target = topCategoryBreakdown.value[index]
     if (!target) return
 
     toggleCategory(target.category)
