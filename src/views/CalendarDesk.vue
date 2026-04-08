@@ -22,10 +22,14 @@
           <article v-for="cell in calendarCells" :key="cell.key" :class="['day-cell', cell.hasData ? 'has-data' : '', cell.isToday ? 'today' : '']">
             <template v-if="cell.day">
               <div class="day-head">{{ monthNumber }}/{{ cell.day }}</div>
-              <div class="amount-list">
-                <p class="income" v-if="cell.income > 0">+{{ formatAmount(cell.income) }}</p>
-                <p class="expense" v-if="cell.expense > 0">-{{ formatAmount(cell.expense) }}</p>
-                <p v-if="cell.hasData" class="balance" :class="cell.balance >= 0 ? 'income' : 'expense'">
+              <div v-if="cell.hasData" class="amount-list">
+                <p :class="['income', 'amount-row', { placeholder: cell.income <= 0 }]">
+                  {{ cell.income > 0 ? `+${formatAmount(cell.income)}` : '\u00A0' }}
+                </p>
+                <p :class="['expense', 'amount-row', { placeholder: cell.expense <= 0 }]">
+                  {{ cell.expense > 0 ? `-${formatAmount(cell.expense)}` : '\u00A0' }}
+                </p>
+                <p class="balance" :class="cell.balance >= 0 ? 'income' : 'expense'">
                   {{ cell.balance >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(cell.balance)) }}
                 </p>
               </div>
