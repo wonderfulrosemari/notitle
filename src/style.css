@@ -220,6 +220,31 @@ select {
   text-align: left;
 }
 
+.sort-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sort-trigger:hover {
+  color: #dce3f3;
+}
+
+.sort-mark {
+  color: #79839a;
+  font-size: 11px;
+}
+
+.amount-sort {
+  margin-left: auto;
+}
+
 .ledger-table tbody td {
   padding: 9px 12px;
   border-bottom: 1px solid #252d3f;
@@ -265,6 +290,40 @@ select {
   text-align: center;
   color: #667085;
   padding: 50px 0;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 12px 6px;
+}
+
+.page-btn {
+  min-width: 36px;
+  height: 32px;
+  border: 1px solid #3a4257;
+  border-radius: 6px;
+  padding: 0 10px;
+  background: #171e2b;
+  color: #d5dbee;
+  cursor: pointer;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #212b3d;
+}
+
+.page-btn.active {
+  border-color: rgba(255, 188, 0, 0.95);
+  color: #fff2cb;
+  background: linear-gradient(90deg, rgba(243, 139, 26, 0.34), rgba(255, 188, 0, 0.2));
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .fab-stack {
@@ -771,6 +830,10 @@ select {
 
   .actions {
     flex-direction: column;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
   }
 
   .form-grid {

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
@@ -8,7 +8,7 @@ const api = axios.create({
 
 const defaultCategories = ['식비', '교통', '주거', '의료', '쇼핑', '문화', '기타']
 const defaultIncomeCategories = ['급여', '부수입', '환급', '용돈', '기타']
-const defaultAssets = ['현금', '체크카드', '신용카드', '계좌이체']
+const PAGE_SIZE = 10
 
 const pad = (value) => String(value).padStart(2, '0')
 
@@ -56,7 +56,6 @@ const normalizeTransaction = (item) => ({
   id: String(item.id),
   date: item.date || formatDate(new Date()),
   type: item.type === 'income' ? 'income' : 'expense',
-  asset: item.asset || '현금',
   category: item.category || '기타',
   amount: Number(item.amount || 0),
   memo: item.memo || '',
@@ -72,10 +71,12 @@ export function useLedger() {
     period: 'month',
     type: 'all',
     category: 'all',
-    asset: 'all',
     search: '',
+    sortBy: 'date',
+    sortOrder: 'desc',
     customFrom: '',
     customTo: '',
+    page: 1,
     selectedIds: [],
   })
 
@@ -113,14 +114,48 @@ export function useLedger() {
       .filter((item) => {
         if (state.type !== 'all' && item.type !== state.type) return false
         if (state.category !== 'all' && item.category !== state.category) return false
-        if (state.asset !== 'all' && item.asset !== state.asset) return false
         if (!keyword) return true
-        return [item.memo, item.category, item.asset].join(' ').toLowerCase().includes(keyword)
+        return [item.memo, item.category].join(' ').toLowerCase().includes(keyword)
       })
       .sort((a, b) => {
-        if (a.date === b.date) return b.createdAt - a.createdAt
-        return b.date.localeCompare(a.date)
+        let compare = 0
+
+        if (state.sortBy === 'date') {
+          compare = a.date.localeCompare(b.date)
+        } else if (state.sortBy === 'category') {
+          compare = a.category.localeCompare(b.category, 'ko-KR')
+        } else if (state.sortBy === 'amount') {
+          compare = Number(a.amount || 0) - Number(b.amount || 0)
+        } else if (state.sortBy === 'memo') {
+          compare = (a.memo || '').localeCompare(b.memo || '', 'ko-KR')
+        }
+
+        if (compare === 0) {
+          if (a.date === b.date) return b.createdAt - a.createdAt
+          return b.date.localeCompare(a.date)
+        }
+
+        return state.sortOrder === 'asc' ? compare : -compare
       })
+  })
+
+  const totalPages = computed(() => {
+    const pages = Math.ceil(filteredTransactions.value.length / PAGE_SIZE)
+    return pages > 0 ? pages : 1
+  })
+
+  const pagedTransactions = computed(() => {
+    const start = (state.page - 1) * PAGE_SIZE
+    return filteredTransactions.value.slice(start, start + PAGE_SIZE)
+  })
+
+  const pageNumbers = computed(() => {
+    const total = totalPages.value
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, index) => index + 1)
+    }
+    const start = Math.max(1, Math.min(state.page - 2, total - 4))
+    return Array.from({ length: 5 }, (_, index) => start + index)
   })
 
   const summary = computed(() => {
@@ -144,12 +179,7 @@ export function useLedger() {
     return [...new Set([...defaultCategories, ...defaultIncomeCategories, ...fromData])].sort()
   })
 
-  const assetOptions = computed(() => {
-    const fromData = transactions.value.map((item) => item.asset)
-    return [...new Set([...defaultAssets, ...fromData])].sort()
-  })
-
-  const visibleIds = computed(() => filteredTransactions.value.map((item) => item.id))
+  const visibleIds = computed(() => pagedTransactions.value.map((item) => item.id))
   const allSelected = computed(
     () => visibleIds.value.length > 0 && visibleIds.value.every((id) => state.selectedIds.includes(id)),
   )
@@ -172,6 +202,36 @@ export function useLedger() {
     state.selectedIds = []
   }
 
+  const goToPage = (page) => {
+    const target = Math.max(1, Math.min(totalPages.value, Number(page) || 1))
+    state.page = target
+    clearSelection()
+  }
+
+  const toggleSort = (key) => {
+    if (state.sortBy === key) {
+      state.sortOrder = state.sortOrder === 'asc' ? 'desc' : 'asc'
+    } else {
+      state.sortBy = key
+      state.sortOrder = 'asc'
+    }
+    state.page = 1
+    clearSelection()
+  }
+
+  const sortMark = (key) => {
+    if (state.sortBy !== key) return '↕'
+    return state.sortOrder === 'asc' ? '▲' : '▼'
+  }
+
+  const nextPage = () => {
+    goToPage(state.page + 1)
+  }
+
+  const prevPage = () => {
+    goToPage(state.page - 1)
+  }
+
   const updateStatus = (message) => {
     statusMessage.value = message
   }
@@ -181,6 +241,7 @@ export function useLedger() {
     try {
       const response = await api.get('/transactions')
       transactions.value = response.data.map(normalizeTransaction)
+      state.page = 1
       updateStatus(`총 ${transactions.value.length}건 불러왔습니다.`)
     } catch (error) {
       updateStatus(`조회 실패: ${error.message}`)
@@ -194,7 +255,6 @@ export function useLedger() {
     const request = {
       date: payload.date,
       type: payload.type,
-      asset: payload.asset,
       category: payload.category,
       amount: Number(payload.amount),
       memo: payload.memo?.trim() || '',
@@ -202,6 +262,7 @@ export function useLedger() {
     }
     const response = await api.post('/transactions', request)
     transactions.value = [normalizeTransaction(response.data), ...transactions.value]
+    state.page = 1
     updateStatus('거래를 추가했습니다.')
   }
 
@@ -213,7 +274,6 @@ export function useLedger() {
       ...target,
       date: payload.date,
       type: payload.type,
-      asset: payload.asset,
       category: payload.category,
       amount: Number(payload.amount),
       memo: payload.memo?.trim() || '',
@@ -250,27 +310,58 @@ export function useLedger() {
     state.anchorDate = formatDate(new Date())
   }
 
+  watch(
+    () => [
+      state.search,
+      state.type,
+      state.category,
+      state.monthCursor,
+      state.anchorDate,
+      state.period,
+      state.customFrom,
+      state.customTo,
+    ],
+    () => {
+      state.page = 1
+    },
+  )
+
+  watch(filteredTransactions, (items) => {
+    if (state.page > totalPages.value) {
+      state.page = totalPages.value
+    }
+    const ids = new Set(items.map((item) => item.id))
+    state.selectedIds = state.selectedIds.filter((id) => ids.has(id))
+  })
+
   return reactive({
     state,
     transactions,
     loading,
     statusMessage,
     filteredTransactions,
+    pagedTransactions,
+    totalPages,
+    pageNumbers,
+    perPage: PAGE_SIZE,
     summary,
     categoryOptions,
-    assetOptions,
     visibleIds,
     allSelected,
     selectedCount,
     currentRange,
     defaultCategories,
     defaultIncomeCategories,
-    defaultAssets,
     fetchTransactions,
     addTransaction,
     updateTransaction,
     removeTransaction,
     removeSelected,
+    goToPage,
+    nextPage,
+    prevPage,
+    toggleSort,
+    sortMark,
     selectAllVisible,
     toggleSelection,
     moveMonth,
