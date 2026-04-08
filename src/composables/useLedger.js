@@ -65,6 +65,11 @@ const normalizeTransaction = (item) => ({
     userId: String(item.userId || ''),
 });
 
+const getSignedAmount = (item) => {
+    const amount = Number(item.amount || 0);
+    return item.type === 'income' ? amount : -amount;
+};
+
 export function useLedger() {
     const auth = useAuth();
     const today = formatDate(new Date());
@@ -131,7 +136,7 @@ export function useLedger() {
                 } else if (state.sortBy === 'category') {
                     compare = a.category.localeCompare(b.category, 'ko-KR');
                 } else if (state.sortBy === 'amount') {
-                    compare = Number(a.amount || 0) - Number(b.amount || 0);
+                    compare = getSignedAmount(a) - getSignedAmount(b);
                 } else if (state.sortBy === 'memo') {
                     compare = (a.memo || '').localeCompare(b.memo || '', 'ko-KR');
                 }

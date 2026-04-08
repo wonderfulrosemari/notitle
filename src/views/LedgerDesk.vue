@@ -45,15 +45,23 @@
         </div>
 
         <table class="ledger-table">
+          <colgroup>
+            <col class="select-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+          </colgroup>
           <thead>
             <tr>
-              <th></th>
-              <th>
+              <th class="select-col"></th>
+              <th class="date-col">
                 <button class="sort-trigger" type="button" @click="ledger.toggleSort('date')">
                   날짜 <span class="sort-mark">{{ ledger.sortMark('date') }}</span>
                 </button>
               </th>
-              <th>
+              <th class="category-col">
                 <button class="sort-trigger" type="button" @click="ledger.toggleSort('category')">
                   카테고리 <span class="sort-mark">{{ ledger.sortMark('category') }}</span>
                 </button>
@@ -63,35 +71,37 @@
                   금액 <span class="sort-mark">{{ ledger.sortMark('amount') }}</span>
                 </button>
               </th>
-              <th>
+              <th class="memo-col">
                 <button class="sort-trigger" type="button" @click="ledger.toggleSort('memo')">
                   메모 <span class="sort-mark">{{ ledger.sortMark('memo') }}</span>
                 </button>
               </th>
-              <th>동작</th>
+              <th class="actions-col">수정</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="item in ledger.pagedTransactions" :key="item.id">
-              <td>
+              <td class="select-col">
                 <input
                   type="checkbox"
                   :checked="ledger.state.selectedIds.includes(item.id)"
                   @change="ledger.toggleSelection(item.id)"
                 />
               </td>
-              <td>{{ item.date }}</td>
-              <td>
-                <span :class="['badge', item.type]">
-                  {{ item.type === 'income' ? '수입' : '지출' }}
+              <td class="date-col">{{ item.date }}</td>
+              <td class="category-col">
+                <span class="category-cell">
+                  <span :class="['badge', item.type]">
+                    {{ item.type === 'income' ? '수입' : '지출' }}
+                  </span>
+                  <span>{{ item.category }}</span>
                 </span>
-                {{ item.category }}
               </td>
               <td class="amount-col" :class="item.type">
                 {{ item.type === 'income' ? '+' : '-' }}{{ formatCurrency(item.amount) }}
               </td>
-              <td>{{ item.memo || '-' }}</td>
-              <td class="actions">
+              <td class="memo-col">{{ item.memo || '-' }}</td>
+              <td class="actions actions-col">
                 <button class="table-btn" type="button" @click="openEdit(item)">편집</button>
                 <button class="table-btn danger" type="button" @click="removeOne(item.id)">삭제</button>
               </td>
@@ -383,11 +393,9 @@ const removeSelected = () => {
 }
 
 const formatCurrency = (value) =>
-  new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW',
+  `${new Intl.NumberFormat('ko-KR', {
     maximumFractionDigits: 0,
-  }).format(value || 0)
+  }).format(value || 0)}원`
 
 watch(
   () => form.type,
