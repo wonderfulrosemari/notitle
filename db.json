@@ -116,5 +116,14 @@
       "name": "계좌이체"
     }
   ],
+  "users": [
+    {
+      "name": "가나다",
+      "email": "abc@abc.com",
+      "password": "abc",
+      "createdAt": 1775613374077,
+      "id": "G4UtDHpWtds"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }

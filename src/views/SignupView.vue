@@ -1,19 +1,8 @@
 <template>
   <main class="auth-page auth-page-signup">
-    <section class="auth-hero">
-      <p class="auth-eyebrow">Create Account</p>
-      <h1>회원가입 후 가계부를 시작해보세요</h1>
-      <p class="auth-copy">
-        이름, 이메일, 비밀번호, 비밀번호 확인을 입력할 수 있는 회원가입 화면입니다.
-      </p>
-      <ul class="auth-feature-list">
-        <li>이름 입력 필드</li>
-        <li>이메일 입력 필드</li>
-        <li>비밀번호와 비밀번호 확인 필드</li>
-      </ul>
-    </section>
+    <p class="auth-page-brand">KB IT'S YOUR LIFE</p>
 
-    <section class="auth-panel">
+    <section class="auth-panel auth-panel-centered">
       <div class="auth-card">
         <div class="auth-card-head">
           <p class="auth-kicker">Sign Up</p>
@@ -69,8 +58,10 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
+const auth = useAuth()
 
 const form = reactive({
   name: '',
@@ -81,7 +72,14 @@ const form = reactive({
 
 const statusMessage = ref('회원가입 정보를 입력해주세요.')
 
-function submitSignup() {
+const resetForm = () => {
+  form.name = ''
+  form.email = ''
+  form.password = ''
+  form.passwordConfirm = ''
+}
+
+async function submitSignup() {
   if (!form.name.trim() || !form.email.trim() || !form.password.trim() || !form.passwordConfirm.trim()) {
     statusMessage.value = '모든 항목을 입력해주세요.'
     return
@@ -92,7 +90,18 @@ function submitSignup() {
     return
   }
 
-  statusMessage.value = '회원가입이 완료되었다고 가정하고 로그인 화면으로 이동합니다.'
-  router.push('/')
+  try {
+    await auth.signup({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+    })
+
+    resetForm()
+    statusMessage.value = '회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.'
+    router.push('/')
+  } catch (error) {
+    statusMessage.value = error.message
+  }
 }
 </script>
