@@ -17,7 +17,7 @@
       <section class="filters">
         <label class="search">
           검색
-          <input v-model="ledger.state.search" type="search" placeholder="메모/분류/자산" />
+          <input v-model="ledger.state.search" type="search" placeholder="메모/카테고리" />
         </label>
       </section>
 
@@ -45,50 +45,103 @@
         </div>
 
         <table class="ledger-table">
+          <colgroup>
+            <col class="select-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+            <col class="main-col" />
+          </colgroup>
           <thead>
             <tr>
-              <th></th>
-              <th>날짜</th>
-              <th>자산</th>
-              <th>분류</th>
-              <th class="amount-col">금액</th>
-              <th>내용</th>
-              <th>동작</th>
+              <th class="select-col"></th>
+              <th class="date-col">
+                <button class="sort-trigger" type="button" @click="ledger.toggleSort('date')">
+                  날짜 <span class="sort-mark">{{ ledger.sortMark('date') }}</span>
+                </button>
+              </th>
+              <th class="category-col">
+                <button class="sort-trigger" type="button" @click="ledger.toggleSort('category')">
+                  카테고리 <span class="sort-mark">{{ ledger.sortMark('category') }}</span>
+                </button>
+              </th>
+              <th class="amount-col">
+                <button class="sort-trigger amount-sort" type="button" @click="ledger.toggleSort('amount')">
+                  금액 <span class="sort-mark">{{ ledger.sortMark('amount') }}</span>
+                </button>
+              </th>
+              <th class="memo-col">
+                <button class="sort-trigger" type="button" @click="ledger.toggleSort('memo')">
+                  메모 <span class="sort-mark">{{ ledger.sortMark('memo') }}</span>
+                </button>
+              </th>
+              <th class="actions-col">수정</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in ledger.filteredTransactions" :key="item.id">
-              <td>
+            <tr v-for="item in ledger.pagedTransactions" :key="item.id">
+              <td class="select-col">
                 <input
                   type="checkbox"
                   :checked="ledger.state.selectedIds.includes(item.id)"
                   @change="ledger.toggleSelection(item.id)"
                 />
               </td>
-              <td>{{ item.date }}</td>
-              <td>{{ item.asset }}</td>
-              <td>
-                <span :class="['badge', item.type]">
-                  {{ item.type === 'income' ? '수입' : '지출' }}
+              <td class="date-col">{{ item.date }}</td>
+              <td class="category-col">
+                <span class="category-cell">
+                  <span :class="['badge', item.type]">
+                    {{ item.type === 'income' ? '수입' : '지출' }}
+                  </span>
+                  <span>{{ item.category }}</span>
                 </span>
-                {{ item.category }}
               </td>
               <td class="amount-col" :class="item.type">
                 {{ item.type === 'income' ? '+' : '-' }}{{ formatCurrency(item.amount) }}
               </td>
-              <td>{{ item.memo || '-' }}</td>
-              <td class="actions">
+              <td class="memo-col">{{ item.memo || '-' }}</td>
+              <td class="actions actions-col">
                 <button class="table-btn" type="button" @click="openEdit(item)">편집</button>
                 <button class="table-btn danger" type="button" @click="removeOne(item.id)">삭제</button>
               </td>
             </tr>
-            <tr v-if="ledger.filteredTransactions.length === 0">
-              <td colspan="7" class="empty-row">
+            <tr v-if="ledger.pagedTransactions.length === 0">
+              <td colspan="6" class="empty-row">
                 {{ ledger.loading ? '불러오는 중입니다...' : '데이터가 없습니다.' }}
               </td>
             </tr>
           </tbody>
         </table>
+
+        <div v-if="ledger.totalPages > 1" class="pagination">
+          <button
+            class="page-btn"
+            type="button"
+            :disabled="ledger.state.page === 1"
+            @click="ledger.prevPage"
+          >
+            이전
+          </button>
+          <button
+            v-for="page in ledger.pageNumbers"
+            :key="`page-${page}`"
+            class="page-btn"
+            :class="{ active: page === ledger.state.page }"
+            type="button"
+            @click="ledger.goToPage(page)"
+          >
+            {{ page }}
+          </button>
+          <button
+            class="page-btn"
+            type="button"
+            :disabled="ledger.state.page === ledger.totalPages"
+            @click="ledger.nextPage"
+          >
+            다음
+          </button>
+        </div>
       </section>
     </section>
 
@@ -100,7 +153,6 @@
       <form class="modal-card" @submit.prevent="submitForm">
         <div class="modal-head">
           <h2>{{ mode === 'create' ? '거래 추가' : '거래 수정' }}</h2>
-          <button class="plain-btn" type="button" @click="closeModal">닫기</button>
         </div>
 
         <div class="form-grid">
@@ -116,10 +168,6 @@
             </select>
           </label>
           <label>
-            자산
-            <input v-model="form.asset" type="text" placeholder="예: 체크카드" required />
-          </label>
-          <label>
             카테고리
             <select v-model="form.category">
               <option v-for="category in formCategoryOptions" :key="category" :value="category">
@@ -133,7 +181,7 @@
           </label>
           <label class="full-width">
             메모
-            <input v-model="form.memo" type="text" placeholder="거래 내용 메모" />
+            <input v-model="form.memo" type="text" placeholder="거래 메모" />
           </label>
         </div>
 
@@ -144,6 +192,25 @@
           <button class="solid-btn" type="submit">{{ mode === 'create' ? '저장' : '수정 저장' }}</button>
         </div>
       </form>
+    </section>
+
+    <section v-if="isConfirmOpen" class="modal-root" @click.self="closeConfirmDialog">
+      <div class="modal-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="modal-head">
+          <h2 id="confirm-title">{{ confirmTitle }}</h2>
+        </div>
+
+        <p class="confirm-message">{{ confirmMessage }}</p>
+
+        <div class="modal-actions">
+          <button class="plain-btn" type="button" :disabled="confirmLoading" @click="closeConfirmDialog">
+            취소
+          </button>
+          <button class="danger-btn" type="button" :disabled="confirmLoading" @click="runConfirmAction">
+            {{ confirmLoading ? '삭제 중...' : '삭제' }}
+          </button>
+        </div>
+      </div>
     </section>
   </main>
 </template>
@@ -157,12 +224,17 @@ const ledger = useLedger()
 const mode = ref('create')
 const editingId = ref('')
 const isModalOpen = ref(false)
+const isConfirmOpen = ref(false)
+const confirmTitle = ref('삭제 확인')
+const confirmMessage = ref('')
+const confirmLoading = ref(false)
 const formStatus = ref('필수값을 입력한 뒤 저장하세요.')
+
+let pendingConfirmAction = null
 
 const form = reactive({
   date: '',
   type: 'expense',
-  asset: '현금',
   category: '식비',
   amount: 0,
   memo: '',
@@ -184,7 +256,6 @@ const resetForm = () => {
   const today = new Date().toISOString().slice(0, 10)
   form.date = today
   form.type = 'expense'
-  form.asset = '현금'
   form.category = '식비'
   form.amount = 0
   form.memo = ''
@@ -203,7 +274,6 @@ const openEdit = (item) => {
   editingId.value = item.id
   form.date = item.date
   form.type = item.type
-  form.asset = item.asset
   form.category = item.category
   form.amount = item.amount
   form.memo = item.memo
@@ -215,13 +285,44 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
+const openConfirmDialog = ({ title = '삭제 확인', message, onConfirm }) => {
+  confirmTitle.value = title
+  confirmMessage.value = message
+  pendingConfirmAction = onConfirm
+  isConfirmOpen.value = true
+}
+
+const closeConfirmDialog = () => {
+  if (confirmLoading.value) return
+  isConfirmOpen.value = false
+  confirmTitle.value = '삭제 확인'
+  confirmMessage.value = ''
+  pendingConfirmAction = null
+}
+
+const runConfirmAction = async () => {
+  if (!pendingConfirmAction) {
+    closeConfirmDialog()
+    return
+  }
+
+  confirmLoading.value = true
+  let shouldClose = true
+
+  try {
+    shouldClose = (await pendingConfirmAction()) !== false
+  } finally {
+    confirmLoading.value = false
+  }
+
+  if (shouldClose && isConfirmOpen.value) {
+    closeConfirmDialog()
+  }
+}
+
 const validateForm = () => {
   if (!form.date) {
     formStatus.value = '날짜를 입력하세요.'
-    return false
-  }
-  if (!form.asset.trim()) {
-    formStatus.value = '자산 항목을 입력하세요.'
     return false
   }
   if (!form.category.trim()) {
@@ -241,7 +342,6 @@ const submitForm = async () => {
   const payload = {
     date: form.date,
     type: form.type,
-    asset: form.asset.trim(),
     category: form.category.trim(),
     amount: Number(form.amount),
     memo: form.memo.trim(),
@@ -259,28 +359,43 @@ const submitForm = async () => {
   }
 }
 
-const removeOne = async (id) => {
-  try {
-    await ledger.removeTransaction(id)
-  } catch (error) {
-    formStatus.value = `삭제 실패: ${error.message}`
-  }
+const removeOne = (id) => {
+  openConfirmDialog({
+    message: '이 내역을 삭제할까요?',
+    onConfirm: async () => {
+      try {
+        await ledger.removeTransaction(id)
+        return true
+      } catch (error) {
+        formStatus.value = `삭제 실패: ${error.message}`
+        return false
+      }
+    },
+  })
 }
 
-const removeSelected = async () => {
-  try {
-    await ledger.removeSelected()
-  } catch (error) {
-    formStatus.value = `선택 삭제 실패: ${error.message}`
-  }
+const removeSelected = () => {
+  const count = ledger.selectedCount
+  if (count === 0) return
+
+  openConfirmDialog({
+    message: `선택한 ${count}건을 삭제할까요?`,
+    onConfirm: async () => {
+      try {
+        await ledger.removeSelected()
+        return true
+      } catch (error) {
+        formStatus.value = `선택 삭제 실패: ${error.message}`
+        return false
+      }
+    },
+  })
 }
 
 const formatCurrency = (value) =>
-  new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW',
+  `${new Intl.NumberFormat('ko-KR', {
     maximumFractionDigits: 0,
-  }).format(value || 0)
+  }).format(value || 0)}원`
 
 watch(
   () => form.type,

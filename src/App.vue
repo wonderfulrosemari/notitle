@@ -3,6 +3,10 @@
     <aside class="side-nav">
       <p class="brand-title">KB 가계부</p>
       <nav class="menu-list">
+        <RouterLink to="/dashboard" class="menu-item">
+          <span class="menu-icon">D</span>
+          <span>대시보드</span>
+        </RouterLink>
         <RouterLink to="/ledger" class="menu-item">
           <span class="menu-icon">L</span>
           <span>내역</span>
@@ -27,6 +31,10 @@
     </aside>
 
     <section class="app-content">
+      <header class="app-toolbar">
+        <button class="app-logout-btn" type="button" @click="handleLogout">로그아웃</button>
+      </header>
+
       <RouterView />
     </section>
   </div>
@@ -35,10 +43,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { RouterLink, RouterView, useRoute } from 'vue-router';
+import { computed } from 'vue'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useAuth } from './composables/useAuth'
 
-const route = useRoute();
+const route = useRoute()
+const router = useRouter()
+const auth = useAuth()
 
-const showAppShell = computed(() => !route.meta.authPage);
+const showAppShell = computed(() => !route.meta.authPage)
+
+function handleLogout() {
+  auth.logout()
+  router.push('/')
+}
 </script>

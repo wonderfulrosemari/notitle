@@ -123,11 +123,11 @@
   ],
   "users": [
     {
+      "id": "G4UtDHpWtds",
       "name": "가나다",
       "email": "abc@abc.com",
       "password": "abc",
-      "createdAt": 1775613374077,
-      "id": "G4UtDHpWtds"
+      "createdAt": 1775613374077
     },
     {
       "name": "라마바",
