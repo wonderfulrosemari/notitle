@@ -10,7 +10,6 @@
           <button class="icon-btn" type="button" @click="moveMonth(-1)">&#60;</button>
           <div class="month-chip">{{ monthLabel }}</div>
           <button class="icon-btn" type="button" @click="moveMonth(1)">&#62;</button>
-          <button class="plain-btn" type="button" @click="focusCurrentMonth">이번 달</button>
         </div>
       </header>
 
@@ -129,17 +128,13 @@ const calendarCells = computed(() => {
 })
 
 function formatAmount(value) {
-  return new Intl.NumberFormat('ko-KR').format(Number(value || 0))
+  return `${new Intl.NumberFormat('ko-KR').format(Number(value || 0))}원`
 }
 
 function moveMonth(offset) {
   const [year, month] = calendarState.monthCursor.split('-').map(Number)
   const moved = new Date(year, month - 1 + offset, 1)
   calendarState.monthCursor = `${moved.getFullYear()}-${String(moved.getMonth() + 1).padStart(2, '0')}`
-}
-
-function focusCurrentMonth() {
-  calendarState.monthCursor = new Date().toISOString().slice(0, 7)
 }
 
 onMounted(async () => {

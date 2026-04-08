@@ -34,6 +34,61 @@
       "userId": "G4UtDHpWtds"
     },
     {
+      "id": "tr-1004",
+      "date": "2026-04-04",
+      "type": "expense",
+      "asset": "신용카드",
+      "category": "쇼핑",
+      "amount": 72000,
+      "memo": "생활용품 구매",
+      "createdAt": 1743724800000,
+      "userId": "G4UtDHpWtds"
+    },
+    {
+      "id": "tr-1007",
+      "date": "2026-04-07",
+      "type": "expense",
+      "asset": "체크카드",
+      "category": "식비",
+      "amount": 123123,
+      "memo": "외식",
+      "createdAt": 1743984000000,
+      "userId": "G4UtDHpWtds"
+    },
+    {
+      "id": "tr-1008",
+      "date": "2026-04-08",
+      "type": "income",
+      "asset": "계좌이체",
+      "category": "부수입",
+      "amount": 1231230,
+      "memo": "프로젝트 정산",
+      "createdAt": 1744070400000,
+      "userId": "G4UtDHpWtds"
+    },
+    {
+      "id": "tr-1009",
+      "date": "2026-04-08",
+      "type": "expense",
+      "asset": "신용카드",
+      "category": "식비",
+      "amount": 123123,
+      "memo": "저녁 모임",
+      "createdAt": 1744074000000,
+      "userId": "G4UtDHpWtds"
+    },
+    {
+      "id": "tr-1010",
+      "date": "2026-04-09",
+      "type": "income",
+      "asset": "계좌이체",
+      "category": "기타",
+      "amount": 13123123,
+      "memo": "프리랜서 정산",
+      "createdAt": 1744156800000,
+      "userId": "G4UtDHpWtds"
+    },
+    {
       "id": "tr-1005",
       "date": "2026-03-29",
       "type": "expense",
@@ -54,6 +109,46 @@
       "memo": "관리비 납부",
       "createdAt": 1742860800000,
       "userId": "G4UtDHpWtds"
+    },
+    {
+      "date": "2026-04-08",
+      "type": "expense",
+      "category": "식비",
+      "amount": 13230,
+      "memo": "",
+      "createdAt": 1775634441852,
+      "userId": "cvE-sstlGUY",
+      "id": "M4CwjVmjmII"
+    },
+    {
+      "date": "2026-04-07",
+      "type": "expense",
+      "category": "식비",
+      "amount": 123123123,
+      "memo": "",
+      "createdAt": 1775634449740,
+      "userId": "cvE-sstlGUY",
+      "id": "T6GFI305fRo"
+    },
+    {
+      "date": "2026-04-09",
+      "type": "income",
+      "category": "급여",
+      "amount": 123123123,
+      "memo": "",
+      "createdAt": 1775634456926,
+      "userId": "cvE-sstlGUY",
+      "id": "JKmtD-qdIXg"
+    },
+    {
+      "date": "2026-04-08",
+      "type": "income",
+      "category": "급여",
+      "amount": 1231231230,
+      "memo": "",
+      "createdAt": 1775634462130,
+      "userId": "cvE-sstlGUY",
+      "id": "Lw5SziEJUK0"
     }
   ],
   "categories": [
