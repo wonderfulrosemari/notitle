@@ -30,6 +30,17 @@
   --expense-color: #ff7f8e;
   --expense-bg: rgba(255, 127, 142, 0.2);
 
+  --page-btn-bg: #171e2b;
+  --page-btn-border: #3a4257;
+  --page-btn-text: #d5dbee;
+  --page-btn-hover-bg: #212b3d;
+  --page-btn-active-bg: linear-gradient(90deg, rgba(243, 139, 26, 0.34), rgba(255, 188, 0, 0.2));
+  --page-btn-active-border: rgba(255, 188, 0, 0.95);
+  --page-btn-active-text: #fff2cb;
+  --page-btn-disabled-bg: #141b28;
+  --page-btn-disabled-border: #313b52;
+  --page-btn-disabled-text: #727d96;
+
   --calendar-has-data-bg: linear-gradient(180deg, #15243a 0%, #101b2c 100%);
   --calendar-has-data-ring: #35527a;
   --calendar-has-data-today-ring: #8bb8ff;
@@ -69,6 +80,17 @@ body.theme-kb {
   --income-bg: rgba(2, 132, 199, 0.15);
   --expense-color: #e11d48;
   --expense-bg: rgba(225, 29, 72, 0.15);
+
+  --page-btn-bg: #ffffff;
+  --page-btn-border: #cbd5e1;
+  --page-btn-text: #334155;
+  --page-btn-hover-bg: #f1f5f9;
+  --page-btn-active-bg: #fff7dc;
+  --page-btn-active-border: #f5b400;
+  --page-btn-active-text: #8a5c00;
+  --page-btn-disabled-bg: #eef2f6;
+  --page-btn-disabled-border: #d7dee8;
+  --page-btn-disabled-text: #9aa6b8;
 
   --calendar-has-data-bg: linear-gradient(180deg, #eef5ff 0%, #e3eefc 100%);
   --calendar-has-data-ring: #9cb6d9;
@@ -436,26 +458,29 @@ select {
 .page-btn {
   min-width: 36px;
   height: 32px;
-  border: 1px solid #3a4257;
+  border: 1px solid var(--page-btn-border);
   border-radius: 6px;
   padding: 0 10px;
-  background: #171e2b;
-  color: #d5dbee;
+  background: var(--page-btn-bg);
+  color: var(--page-btn-text);
   cursor: pointer;
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #212b3d;
+  background: var(--page-btn-hover-bg);
 }
 
 .page-btn.active {
-  border-color: rgba(255, 188, 0, 0.95);
-  color: #fff2cb;
-  background: linear-gradient(90deg, rgba(243, 139, 26, 0.34), rgba(255, 188, 0, 0.2));
+  border-color: var(--page-btn-active-border);
+  color: var(--page-btn-active-text);
+  background: var(--page-btn-active-bg);
 }
 
 .page-btn:disabled {
-  opacity: 0.5;
+  background: var(--page-btn-disabled-bg);
+  border-color: var(--page-btn-disabled-border);
+  color: var(--page-btn-disabled-text);
+  opacity: 1;
   cursor: not-allowed;
 }
 
