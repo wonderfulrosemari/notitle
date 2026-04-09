@@ -19,7 +19,9 @@
         </article>
         <article class="metric">
           <p>지출</p>
-          <strong class="expense">{{ formatWon(ledger.summary.expense) }}</strong>
+          <strong class="expense">{{
+            formatWon(ledger.summary.expense)
+          }}</strong>
         </article>
         <article class="metric">
           <p>여유</p>
@@ -32,7 +34,13 @@
       <section class="table-zone">
         <div class="table-tools">
           <span>최근 거래 내역</span>
-          <button class="plain-btn" type="button" @click="ledger.fetchTransactions">새로고침</button>
+          <button
+            class="plain-btn"
+            type="button"
+            @click="ledger.fetchTransactions"
+          >
+            새로고침
+          </button>
         </div>
 
         <table class="ledger-table">
@@ -51,16 +59,20 @@
                 <span :class="['badge', item.type]">
                   {{ item.type === 'income' ? '수입' : '지출' }}
                 </span>
+                <span class="category-emoji">{{ item.emoji }}</span>
                 {{ item.category }}
               </td>
               <td class="amount-col" :class="item.type">
-                {{ item.type === 'income' ? '+' : '-' }}{{ formatWon(item.amount) }}
+                {{ item.type === 'income' ? '+' : '-'
+                }}{{ formatWon(item.amount) }}
               </td>
               <td>{{ item.memo || '-' }}</td>
             </tr>
             <tr v-if="recentTransactions.length === 0">
               <td colspan="4" class="empty-row">
-                {{ ledger.loading ? '불러오는 중입니다...' : '데이터가 없습니다.' }}
+                {{
+                  ledger.loading ? '불러오는 중입니다...' : '데이터가 없습니다.'
+                }}
               </td>
             </tr>
           </tbody>
@@ -71,27 +83,66 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
-import { useLedger } from '../composables/useLedger'
+import { computed, onMounted, nextTick } from 'vue';
+import { useLedger } from '../composables/useLedger';
+import { useSettings } from '../composables/useSettings';
+import { useAuth } from '../composables/useAuth';
 
-const ledger = useLedger()
+const ledger = useLedger();
+const auth = useAuth();
+const { budget, fetchUserBudget } = useSettings();
+
+// 예산 초과 체크 로직
+const checkBudgetExceeded = () => {
+  if (budget.value > 0 && ledger.summary.expense > budget.value) {
+    setTimeout(() => {
+      alert(
+        `⚠️ 예산 초과 알림\n\n목표 예산(${budget.value.toLocaleString()}원)보다 ` +
+          `현재 지출(${ledger.summary.expense.toLocaleString()}원)이 더 많습니다.`,
+      );
+    }, 500);
+  }
+};
 
 const recentTransactions = computed(() => {
-  return ledger.filteredTransactions.slice(0, 10)
-})
+  return ledger.filteredTransactions.slice(0, 10);
+});
 
+// 대시보드 상태 메시지 (필요시 사용)
 const dashboardStatus = computed(() => {
-  return `총 ${ledger.filteredTransactions.length}건 중 최근 ${recentTransactions.value.length}건을 표시하고 있습니다.`
-})
+  return `총 ${ledger.filteredTransactions.length}건 중 최근 ${recentTransactions.value.length}건을 표시 중입니다.`;
+});
 
 const formatNumber = (value) =>
   new Intl.NumberFormat('ko-KR', {
     maximumFractionDigits: 0,
-  }).format(value || 0)
+  }).format(value || 0);
 
-const formatWon = (value) => `${formatNumber(value)}원`
+const formatWon = (value) => `${formatNumber(value)}원`;
 
 onMounted(async () => {
-  await ledger.fetchTransactions()
-})
+  const userId = auth.state.currentUser?.id;
+  if (!userId) return;
+
+  try {
+    await ledger.checkAndSyncRegulars();
+
+    await Promise.all([ledger.fetchTransactions(), fetchUserBudget(userId)]);
+
+    await nextTick();
+
+    checkBudgetExceeded();
+  } catch (error) {
+    console.error('대시보드 로딩 중 오류:', error);
+  }
+});
 </script>
+
+<style scoped>
+.category-emoji {
+  margin-left: 4px;
+  margin-right: 4px;
+  font-size: 1.1em;
+  vertical-align: middle;
+}
+</style>
