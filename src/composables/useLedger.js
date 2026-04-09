@@ -2,15 +2,12 @@ import axios from 'axios';
 import { computed, reactive, ref, watch } from 'vue';
 import { useAuth } from './useAuth';
 
-// --- [공유 데이터 영역] ---
-// 함수 밖에 선언하여 모든 컴포넌트가 동일한 데이터를 바라보게 합니다.
 const transactions = ref([]);
 const categories = ref([]);
 const regulars = ref([]);
 const loading = ref(false);
 const statusMessage = ref('');
 
-// UI 상태도 공유하여 페이지 이동 시에도 필터나 날짜가 유지되도록 합니다.
 const state = reactive({
   monthCursor: new Date().toISOString().slice(0, 7),
   anchorDate: new Date().toISOString().slice(0, 10),
