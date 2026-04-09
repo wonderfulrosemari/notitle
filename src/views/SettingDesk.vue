@@ -13,10 +13,13 @@
 
       <div v-if="activeMenu === 'budget'" class="item-content">
         <div class="flex-row">
-          <input type="number" v-model="budget" placeholder="목표 예산 입력" />
-          <button @click="saveBudget" class="solid-btn">저장</button>
+          <input
+            type="number"
+            v-model="budget"
+            placeholder="월 목표 예산 입력"
+          />
+          <button @click="handleSaveBudget" class="solid-btn">저장</button>
         </div>
-        <p class="hint">설정한 금액을 초과하면 알림창이 나타납니다.</p>
       </div>
     </section>
 
@@ -51,7 +54,6 @@
               </select>
             </div>
           </div>
-
           <div class="input-grid">
             <div class="field">
               <label>금액</label>
@@ -65,7 +67,7 @@
               <label>카테고리</label>
               <select v-model="newRegular.category">
                 <option
-                  v-for="cat in categories"
+                  v-for="cat in ledger.categories"
                   :key="cat.id"
                   :value="cat.name"
                 >
@@ -74,17 +76,15 @@
               </select>
             </div>
           </div>
-
           <div class="field">
             <label>메모</label>
             <input
               v-model="newRegular.memo"
               type="text"
-              placeholder="간단한 메모 (예: 음식점 이름)"
+              placeholder="예: 넷플릭스 구독"
             />
           </div>
-
-          <button @click="addRegular" class="solid-btn full-width">
+          <button @click="handleAddRegular" class="solid-btn full-width">
             정기 항목 등록
           </button>
         </div>
@@ -97,34 +97,51 @@
     >
       <div class="item-header" @click="toggleMenu('category')">
         <div class="header-left">
-          <span class="icon">🏷️</span>
-          <span class="label">카테고리 및 이모지 관리</span>
+          <span class="icon">🏷️</span><span class="label">카테고리 관리</span>
         </div>
         <span class="arrow">{{ activeMenu === 'category' ? '▲' : '▼' }}</span>
       </div>
-
       <div v-if="activeMenu === 'category'" class="item-content">
-        <div class="flex-row">
-          <button class="emoji-select-btn" @click="toggleEmojiPicker">
+        <div class="flex-row emoji-picker-container">
+          <button
+            type="button"
+            class="emoji-select-btn"
+            @click.stop="isEmojiPickerOpen = !isEmojiPickerOpen"
+          >
             {{ newCategory.emoji }}
           </button>
-          <input v-model="newCategory.name" placeholder="새 카테고리 이름" />
-          <button @click="addCategory" class="solid-btn">추가</button>
-        </div>
 
-        <div v-if="isEmojiPickerOpen" class="emoji-palette">
-          <p class="palette-title">아이콘 선택</p>
-          <div class="emoji-grid">
-            <div
-              v-for="emoji in emojiList"
-              :key="emoji"
-              class="emoji-item"
-              :class="{ selected: newCategory.emoji === emoji }"
-              @click="selectEmoji(emoji)"
-            >
-              {{ emoji }}
+          <div v-if="isEmojiPickerOpen" class="emoji-popover">
+            <div class="emoji-grid">
+              <span
+                v-for="emoji in emojiList"
+                :key="emoji"
+                class="emoji-item"
+                @click="selectEmoji(emoji)"
+              >
+                {{ emoji }}
+              </span>
             </div>
           </div>
+
+          <input
+            v-model="newCategory.name"
+            placeholder="새 카테고리 이름"
+            @focus="isEmojiPickerOpen = false"
+          />
+          <button @click="handleAddCategory" class="solid-btn">추가</button>
+        </div>
+
+        <div class="category-tags" style="margin-top: 15px">
+          <span v-for="cat in ledger.categories" :key="cat.id" class="cat-tag">
+            {{ cat.emoji }} {{ cat.name }}
+            <button
+              class="del-cat-btn"
+              @click="handleDeleteCategory(cat.id, cat.name)"
+            >
+              ✕
+            </button>
+          </span>
         </div>
       </div>
     </section>
@@ -132,12 +149,9 @@
     <section class="settings-item" :class="{ active: activeMenu === 'theme' }">
       <div class="item-header" @click="toggleMenu('theme')">
         <div class="header-left">
-          <span class="icon">🎨</span>
-          <span class="label">화면 테마 설정</span>
+          <span class="icon">🎨</span><span class="label">테마 설정</span>
         </div>
-        <span class="arrow">{{ activeMenu === 'theme' ? '▲' : '▼' }}</span>
       </div>
-
       <div v-if="activeMenu === 'theme'" class="item-content">
         <div class="theme-toggle-wrap">
           <div
@@ -145,49 +159,47 @@
             :class="{ active: currentTheme === 'dark' }"
             @click="setTheme('dark')"
           >
-            <div class="theme-preview dark-preview"></div>
-            <span>다크 모드 (기본)</span>
+            다크 모드
           </div>
-
           <div
             class="theme-card"
             :class="{ active: currentTheme === 'kb' }"
             @click="setTheme('kb')"
           >
-            <div class="theme-preview kb-preview"></div>
-            <span>KB 테마 (라이트)</span>
+            라이트 모드
           </div>
         </div>
-        <p class="hint">선택한 테마는 다음 접속 시에도 유지됩니다.</p>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
+import { useLedger } from '../composables/useLedger';
+import { useSettings } from '../composables/useSettings';
+import { useAuth } from '../composables/useAuth';
 
-// ---------------------------------
-// 1. 공통 UI 상태 관리
-// ---------------------------------
+const ledger = useLedger();
+const auth = useAuth();
+const { budget, fetchUserBudget, updateUserBudget } = useSettings();
+
 const activeMenu = ref(null);
+const currentUserId = computed(() => auth.state.currentUser?.id);
 
 const toggleMenu = (menuName) => {
   activeMenu.value = activeMenu.value === menuName ? null : menuName;
 };
 
-// ---------------------------------
-// 2. 예산 설정
-// ---------------------------------
-const budget = ref(0);
-
-const saveBudget = () => {
-  alert('예산이 저장되었습니다.');
+const handleSaveBudget = async () => {
+  try {
+    await updateUserBudget(currentUserId.value, budget.value);
+    alert('목표 예산이 저장되었습니다!');
+  } catch (error) {
+    alert('저장에 실패했습니다.');
+  }
 };
 
-// ---------------------------------
-// 3. 정기결제 설정
-// ---------------------------------
 const newRegular = ref({
   payDay: 1,
   type: 'expense',
@@ -196,95 +208,137 @@ const newRegular = ref({
   memo: '',
 });
 
-const addRegular = () => {
-  alert('정기결제 항목이 추가되었습니다.');
+const handleAddRegular = async () => {
+  if (newRegular.value.amount <= 0) return alert('금액을 입력하세요.');
+  try {
+    const emoji = ledger.getEmojiByName(newRegular.value.category) || '✨';
+    const createdReg = await ledger.addRegular({
+      ...newRegular.value,
+      amount: Number(newRegular.value.amount),
+      emoji: emoji,
+    });
+
+    const now = new Date();
+    const targetDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(newRegular.value.payDay).padStart(2, '0')}`;
+
+    await ledger.addTransaction({
+      date: targetDate,
+      type: newRegular.value.type,
+      category: newRegular.value.category,
+      amount: Number(newRegular.value.amount),
+      memo: `[정기] ${newRegular.value.memo || newRegular.value.category}`,
+      emoji: emoji,
+      regularId: createdReg.id,
+    });
+
+    alert(`매월 ${newRegular.value.payDay}일자로 정기결제가 등록되었습니다.`);
+    newRegular.value.amount = 0;
+    newRegular.value.memo = '';
+  } catch (error) {
+    alert('등록 중 오류가 발생했습니다.');
+  }
 };
 
-// ---------------------------------
-// 4. 카테고리 및 이모지 관리
-// ---------------------------------
-//test 용
-const categories = ref([
-  { id: 1, name: '식비', emoji: '🍴' },
-  { id: 2, name: '교통', emoji: '🚌' },
-  { id: 3, name: '구독료', emoji: '📺' },
-]);
-
-const newCategory = ref({
-  name: '',
-  emoji: '💰',
-});
-
+const newCategory = ref({ name: '', emoji: '💰' });
 const isEmojiPickerOpen = ref(false);
 
 const emojiList = [
   '💰',
-  '🍴',
+  '💵',
+  '💳',
+  '🍕',
   '☕',
+  '🍺',
+  '🍱',
   '🚌',
-  '🚕',
-  '🛍️',
-  '🏥',
-  '💊',
+  '🚗',
   '🏠',
+  '🛒',
+  '🛍️',
   '🎬',
   '🎮',
-  '✈️',
-  '📚',
-  '👗',
-  '💇‍♀️',
-  '🐶',
+  '🏥',
+  '💊',
   '🎁',
-  '📱',
+  '🔌',
+  '📚',
+  '🏋️',
+  '💇',
+  '🐈',
+  '🐕',
+  '✈️',
+  '⛽',
+  '💧',
+  '🔥',
+  '✨',
+  '☁️',
+  '🌈',
 ];
-
-const toggleEmojiPicker = () => {
-  isEmojiPickerOpen.value = !isEmojiPickerOpen.value;
-};
 
 const selectEmoji = (emoji) => {
   newCategory.value.emoji = emoji;
   isEmojiPickerOpen.value = false;
 };
 
-const addCategory = () => {
-  if (!newCategory.value.name.trim()) {
-    alert('카테고리 이름을 입력해주세요.');
-    return;
+const handleAddCategory = async () => {
+  if (!newCategory.value.name.trim()) return alert('카테고리명을 입력하세요.');
+  try {
+    await ledger.addCategory({
+      name: newCategory.value.name.trim(),
+      emoji: newCategory.value.emoji,
+      type: 'expense',
+    });
+    newCategory.value.name = '';
+    newCategory.value.emoji = '💰';
+  } catch (error) {
+    alert('카테고리 추가 실패');
   }
-  alert(
-    `[${newCategory.value.emoji} ${newCategory.value.name}] 카테고리 및 이모지 추가되었습니다.`,
-  );
-  newCategory.value.name = '';
-  newCategory.value.emoji = '💰';
 };
 
-// ---------------------------------
-// 5. 테마 설정 (다크/라이트)
-// ---------------------------------
-const currentTheme = ref('dark');
+const handleDeleteCategory = async (id, name) => {
+  if (confirm(`'${name}' 카테고리를 삭제할까요?`)) {
+    try {
+      await ledger.removeCategory(id);
+    } catch (error) {
+      alert('삭제 실패');
+    }
+  }
+};
 
+// 바깥 클릭 시 피커 닫기
+const handleGlobalClick = () => {
+  isEmojiPickerOpen.value = false;
+};
+
+const currentTheme = ref('dark');
 const setTheme = (theme) => {
   currentTheme.value = theme;
-
-  if (theme === 'kb') {
-    document.body.classList.add('theme-kb');
-  } else {
-    document.body.classList.remove('theme-kb');
-  }
-
+  if (theme === 'kb') document.body.classList.add('theme-kb');
+  else document.body.classList.remove('theme-kb');
   localStorage.setItem('app-theme', theme);
 };
 
-onMounted(() => {
-  const savedTheme = localStorage.getItem('app-theme');
-  if (savedTheme === 'kb') {
-    setTheme('kb');
+onMounted(async () => {
+  await ledger.fetchCategories();
+  if (currentUserId.value) await fetchUserBudget(currentUserId.value);
+
+  const savedTheme = localStorage.getItem('app-theme') || 'dark';
+  setTheme(savedTheme);
+
+  if (ledger.categories?.length > 0) {
+    newRegular.value.category = ledger.categories[0].name;
   }
+
+  window.addEventListener('click', handleGlobalClick);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleGlobalClick);
 });
 </script>
 
 <style scoped>
+/* 페이지 기본 설정 */
 .settings-page {
   padding: 24px 16px;
   max-width: 700px;
@@ -293,21 +347,25 @@ onMounted(() => {
 }
 
 .title {
-  font-size: 22px;
+  font-size: 24px;
   margin-bottom: 24px;
   font-weight: 700;
   color: var(--text-title);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* 아코디언 카드 영역 */
+/* 설정 항목 카드 */
 .settings-item {
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--bg-main);
   margin-bottom: 16px;
-  overflow: hidden;
+  /* overflow: hidden;  <-- 이 줄을 삭제하거나 주석 처리하세요! */
+  position: relative; /* 추가 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .settings-item.active {
@@ -318,20 +376,9 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 18px 20px;
   cursor: pointer;
   background: var(--bg-sub);
-  transition: background 0.3s ease;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.icon {
-  font-size: 22px;
 }
 
 .label {
@@ -340,54 +387,29 @@ onMounted(() => {
   color: var(--text-title);
 }
 
-.active .label {
-  color: var(--point-color);
-}
-
-.arrow {
-  color: var(--text-sub);
-}
-
 .item-content {
   padding: 24px 20px;
   background: var(--bg-main);
   border-top: 1px solid var(--border-light);
 }
 
-/* 폼 레이아웃 */
+/* 정기결제 폼 */
 .form-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-
 .input-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-
-.flex-row {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-}
-
-.flex-row input {
-  flex: 1;
-}
-
-.flex-row button:not(.emoji-select-btn) {
-  flex: 0 0 90px;
-  margin: 0;
-}
-
 .field {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
 }
-
 .field label {
   font-size: 13px;
   color: var(--text-sub);
@@ -397,20 +419,15 @@ onMounted(() => {
 input,
 select {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 6px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
   background: var(--bg-sub);
   color: var(--text-main);
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
-  transition: all 0.2s;
-}
-
-input::placeholder {
-  color: var(--text-sub);
-  opacity: 0.7;
 }
 
 input:focus,
@@ -418,88 +435,106 @@ select:focus {
   border-color: var(--point-color);
 }
 
-.solid-btn {
-  padding: 12px 16px;
-  font-size: 14px;
-}
-
-.full-width {
+/* --- 이모지 피커 스타일 --- */
+.emoji-picker-container {
+  position: relative;
+  display: flex;
+  gap: 10px;
   width: 100%;
-  margin-top: 16px;
-  padding: 14px;
-  font-size: 15px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--text-sub);
-  margin-top: 10px;
-  line-height: 1.4;
 }
 
 .emoji-select-btn {
-  flex: 0 0 48px;
-  height: 48px;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  background: var(--bg-sub);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.emoji-select-btn:hover {
-  border-color: var(--point-color);
-  background: rgba(255, 188, 0, 0.05);
-}
-
-.emoji-palette {
-  margin-top: 16px;
-  padding: 16px;
+  flex: 0 0 50px;
+  height: 44px;
   background: var(--bg-sub);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  animation: fadeIn 0.2s ease-out;
+  font-size: 20px;
+  cursor: pointer;
 }
 
-.palette-title {
-  margin: 0 0 12px 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-sub);
+.emoji-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  z-index: 999;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  width: 550px;
 }
 
 .emoji-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  grid-template-columns: repeat(8, 1fr);
   gap: 8px;
+  max-height: 200px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .emoji-item {
   display: flex;
-  align-items: center;
   justify-content: center;
-  height: 36px;
-  font-size: 20px;
-  border-radius: 6px;
+  align-items: center;
+  font-size: 24px;
+  padding: 8px;
   cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
+  border-radius: 8px;
+  transition: background 0.2s;
 }
 
 .emoji-item:hover {
-  background: var(--bg-hover);
+  background: var(--bg-sub);
   transform: scale(1.1);
 }
 
-.emoji-item.selected {
-  background: rgba(255, 188, 0, 0.15);
-  border-color: var(--point-color);
+.solid-btn {
+  height: 44px;
+  padding: 0 20px;
+  background: var(--point-gradient);
+  color: #111621;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.category-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+.cat-tag {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-sub);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+}
+
+.del-cat-btn {
+  background: none;
+  border: none;
+  color: var(--text-sub);
+  margin-left: 6px;
+  cursor: pointer;
 }
 
 .theme-toggle-wrap {
@@ -507,55 +542,26 @@ select:focus {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-
 .theme-card {
-  border: 2px solid var(--border-color);
-  border-radius: 10px;
-  padding: 16px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
   background: var(--bg-sub);
-  color: var(--text-sub);
-  font-weight: 600;
-  font-size: 14px;
+  cursor: pointer;
 }
-
 .theme-card.active {
   border-color: var(--point-color);
-  color: var(--point-color);
-  background: rgba(255, 188, 0, 0.08);
-}
-
-.theme-preview {
-  height: 60px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  border: 1px solid var(--border-color);
-}
-
-.dark-preview {
-  background: #111621;
-}
-
-.kb-preview {
-  background: linear-gradient(135deg, #ffbc00 0%, #f38b1a 100%);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: var(--point-color-hover);
+  color: #111621;
 }
 
 @media (max-width: 600px) {
   .input-grid {
     grid-template-columns: 1fr;
+  }
+  .emoji-popover {
+    width: 220px;
   }
 }
 </style>
