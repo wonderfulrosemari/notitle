@@ -431,8 +431,7 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  width: 100%;
+  gap: 0;
 }
 
 .actions {

@@ -144,7 +144,22 @@ export function useLedger() {
       return fetchStatusMessage.value;
     }
 
-    return `${scopedByRange.value.length}건을 불러왔습니다.`;
+    return `${state.monthCursor} 기준 거래 ${scopedByRange.value.length}건을 집계했습니다.`;
+  });
+
+  const selectedTransactions = computed(() =>
+    transactions.value.filter((item) => state.selectedIds.includes(item.id)),
+  );
+
+  const selectedCount = computed(() => selectedTransactions.value.length);
+
+  const allSelected = computed(() => {
+    return (
+      pagedTransactions.value.length > 0 &&
+      pagedTransactions.value.every((item) =>
+        state.selectedIds.includes(item.id),
+      )
+    );
   });
 
   const fetchTransactions = async () => {
@@ -199,6 +214,41 @@ export function useLedger() {
     } catch (e) {
       console.error('삭제 에러:', e);
     }
+  };
+
+  const toggleSelection = (id) => {
+    if (state.selectedIds.includes(id)) {
+      state.selectedIds = state.selectedIds.filter(
+        (selectedId) => selectedId !== id,
+      );
+    } else {
+      state.selectedIds = [...state.selectedIds, id];
+    }
+  };
+
+  const selectAllVisible = (checked) => {
+    const visibleIds = pagedTransactions.value.map((item) => item.id);
+
+    if (checked) {
+      state.selectedIds = Array.from(
+        new Set([...state.selectedIds, ...visibleIds]),
+      );
+      return;
+    }
+
+    state.selectedIds = state.selectedIds.filter(
+      (id) => !visibleIds.includes(id),
+    );
+  };
+
+  const removeSelected = async () => {
+    const targets = [...selectedTransactions.value];
+
+    for (const item of targets) {
+      await removeTransaction(item);
+    }
+
+    state.selectedIds = [];
   };
 
   const checkAndSyncRegulars = async () => {
@@ -309,10 +359,15 @@ export function useLedger() {
     totalPages,
     pageNumbers,
     summary,
+    selectedCount,
+    allSelected,
     categories,
     fetchTransactions,
     addTransaction,
     removeTransaction,
+    removeSelected,
+    toggleSelection,
+    selectAllVisible,
     checkAndSyncRegulars,
     fetchCategories,
     getEmojiByName,
