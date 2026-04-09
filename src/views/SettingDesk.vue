@@ -151,6 +151,7 @@
         <div class="header-left">
           <span class="icon">🎨</span><span class="label">테마 설정</span>
         </div>
+        <span class="arrow">{{ activeMenu === 'theme' ? '▲' : '▼' }}</span>
       </div>
       <div v-if="activeMenu === 'theme'" class="item-content">
         <div class="theme-toggle-wrap">
