@@ -110,7 +110,7 @@ const recentTransactions = computed(() => {
 
 // 대시보드 상태 메시지 (필요시 사용)
 const dashboardStatus = computed(() => {
-  return `총 ${ledger.filteredTransactions.length}건 중 최근 ${recentTransactions.value.length}건을 표시 중입니다.`;
+  return `최근 ${recentTransactions.value.length}건을 표시 중입니다.`;
 });
 
 const formatNumber = (value) =>
