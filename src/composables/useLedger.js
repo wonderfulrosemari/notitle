@@ -6,7 +6,7 @@ const transactions = ref([]);
 const categories = ref([]);
 const regulars = ref([]);
 const loading = ref(false);
-const statusMessage = ref('');
+const fetchStatusMessage = ref('');
 
 const state = reactive({
   monthCursor: new Date().toISOString().slice(0, 7),
@@ -134,15 +134,28 @@ export function useLedger() {
     () => Math.ceil(filteredTransactions.value.length / PAGE_SIZE) || 1,
   );
 
+  const pageNumbers = computed(() =>
+    Array.from({ length: totalPages.value }, (_, index) => index + 1),
+  );
+
+  const statusMessage = computed(() => {
+    if (loading.value) return '불러오는 중입니다.';
+    if (fetchStatusMessage.value.startsWith('조회 실패')) {
+      return fetchStatusMessage.value;
+    }
+
+    return `${scopedByRange.value.length}건을 불러왔습니다.`;
+  });
+
   const fetchTransactions = async () => {
     try {
       const userId = requireUserId();
       loading.value = true;
       const response = await api.get('/transactions', { params: { userId } });
       transactions.value = response.data.map(normalizeTransaction);
-      statusMessage.value = `총 ${transactions.value.length}건의 내역을 불러왔습니다.`;
+      fetchStatusMessage.value = '';
     } catch (error) {
-      statusMessage.value = `조회 실패: ${error.message}`;
+      fetchStatusMessage.value = `조회 실패: ${error.message}`;
     } finally {
       loading.value = false;
     }
@@ -294,6 +307,7 @@ export function useLedger() {
     filteredTransactions,
     pagedTransactions,
     totalPages,
+    pageNumbers,
     summary,
     categories,
     fetchTransactions,
