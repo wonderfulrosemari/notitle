@@ -43,7 +43,7 @@
           </div>
 
           <div class="stats-chart-box stats-line-box">
-            <Line :data="lineChartData" :options="lineChartOptions" />
+            <Line :key="lineChartKey" :data="lineChartData" :options="lineChartOptions" />
           </div>
         </article>
 
@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { Line, Pie } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -161,6 +161,9 @@ ChartJS.register(
 
 const ledger = useLedger()
 const selectedCategory = ref('all')
+const lineChartKey = ref(0)
+
+let themeObserver = null
 
 const pieColors = [
   '#f4d13d',
@@ -343,45 +346,55 @@ const pieChartData = computed(() => {
   }
 })
 
-const lineChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      labels: {
-        color: '#dce6ff'
-      }
-    },
-    tooltip: {
-      callbacks: {
-        label(context) {
-          return `${context.dataset.label}: ${formatWon(context.raw)}`
-        }
-      }
-    }
-  },
-  scales: {
-    x: {
-      ticks: {
-        color: '#b7c4e0'
-      },
-      grid: {
-        color: 'rgba(255,255,255,0.08)'
-      }
-    },
-    y: {
-      ticks: {
-        color: '#b7c4e0',
-        callback(value) {
-          return formatNumber(value)
+const lineChartOptions = computed(() => {
+  lineChartKey.value
+
+  const isLightMode = document.body.classList.contains('theme-kb')
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: {
+          color: isLightMode ? '#0f172a' : '#dce6ff'
         }
       },
-      grid: {
-        color: 'rgba(255,255,255,0.08)'
+      tooltip: {
+        callbacks: {
+          label(context) {
+            return `${context.dataset.label}: ${formatWon(context.raw)}`
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: isLightMode ? '#0f172a' : '#b7c4e0'
+        },
+        grid: {
+          color: isLightMode
+            ? 'rgba(15, 23, 42, 0.08)'
+            : 'rgba(255,255,255,0.08)'
+        }
+      },
+      y: {
+        ticks: {
+          color: isLightMode ? '#0f172a' : '#b7c4e0',
+          callback(value) {
+            return formatNumber(value)
+          }
+        },
+        grid: {
+          color: isLightMode
+            ? 'rgba(15, 23, 42, 0.08)'
+            : 'rgba(255,255,255,0.08)'
+        }
       }
     }
   }
-}
+})
 
 const pieChartOptions = {
   responsive: true,
@@ -447,5 +460,22 @@ watch(
 
 onMounted(async () => {
   await ledger.fetchTransactions()
+
+  lineChartKey.value += 1
+
+  themeObserver = new MutationObserver(() => {
+    lineChartKey.value += 1
+  })
+
+  themeObserver.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
+})
+
+onBeforeUnmount(() => {
+  if (themeObserver) {
+    themeObserver.disconnect()
+  }
 })
 </script>
