@@ -47,6 +47,10 @@
   --calendar-income-accent: #61dfba;
   --calendar-expense-accent: #ff99a6;
   --calendar-balance-divider: rgba(157, 177, 212, 0.4);
+  --calendar-positive-cell-bg: linear-gradient(180deg, #1a3022 0%, #15281c 100%);
+  --calendar-positive-cell-ring: #4d8b5f;
+  --calendar-negative-cell-bg: linear-gradient(180deg, #331f27 0%, #28161d 100%);
+  --calendar-negative-cell-ring: #9a5968;
 }
 
 :root.theme-kb,
@@ -98,6 +102,10 @@ body.theme-kb {
   --calendar-income-accent: #0f766e;
   --calendar-expense-accent: #be123c;
   --calendar-balance-divider: rgba(100, 116, 139, 0.35);
+  --calendar-positive-cell-bg: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+  --calendar-positive-cell-ring: #86cc9c;
+  --calendar-negative-cell-bg: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+  --calendar-negative-cell-ring: #f3a8b8;
 }
 
 * {
@@ -1050,11 +1058,26 @@ select {
   box-shadow: inset 0 0 0 2px var(--calendar-has-data-ring);
 }
 
+.day-cell.has-data.balance-positive {
+  background: var(--calendar-positive-cell-bg);
+  box-shadow: inset 0 0 0 2px var(--calendar-positive-cell-ring);
+}
+
+.day-cell.has-data.balance-negative {
+  background: var(--calendar-negative-cell-bg);
+  box-shadow: inset 0 0 0 2px var(--calendar-negative-cell-ring);
+}
+
 .day-cell.today {
   box-shadow: inset 0 0 0 2px var(--income-color);
 }
 
 .day-cell.has-data.today {
+  box-shadow: inset 0 0 0 2px var(--calendar-has-data-today-ring);
+}
+
+.day-cell.has-data.balance-positive.today,
+.day-cell.has-data.balance-negative.today {
   box-shadow: inset 0 0 0 2px var(--calendar-has-data-today-ring);
 }
 
@@ -1317,16 +1340,19 @@ select {
 
 .stats-pie-layout {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(150px, 178px);
-  gap: 8px;
+  grid-template-columns: minmax(240px, 1.3fr) minmax(170px, 190px);
+  gap: 12px;
   align-items: center;
-  padding: 8px 10px 10px;
+  padding: 10px 12px 12px;
   height: 100%;
 }
 
 .stats-pie-canvas {
   position: relative;
-  height: clamp(150px, 18vh, 188px);
+  width: 100%;
+  max-width: 320px;
+  justify-self: center;
+  height: clamp(220px, 28vh, 300px);
 }
 
 .stats-pie-legend {
@@ -1340,7 +1366,7 @@ select {
   justify-content: space-between;
   gap: 10px;
   width: 100%;
-  padding: 7px 9px;
+  padding: 8px 10px;
   border: 1px solid #343c52;
   border-radius: 10px;
   background: #101721;
@@ -1367,23 +1393,29 @@ select {
 }
 
 .stats-pie-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #eef2ff;
 }
 
+.stats-pie-legend-row strong {
+  font-size: 13px;
+}
+
 .stats-select {
-  min-width: 150px;
-  padding: 6px 8px;
+  min-width: 138px;
+  padding: 5px 7px;
   border-radius: 6px;
   border: 1px solid #343c52;
   color: #ecf1ff;
   background: #0f1520;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .stats-detail-list {
   display: grid;
-  gap: 6px;
-  padding: 8px 10px 10px;
+  gap: 5px;
+  padding: 7px 8px 8px;
   align-content: start;
   overflow: auto;
   min-height: 0;
@@ -1393,9 +1425,9 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 7px 9px;
+  padding: 9px 11px;
   border: 1px solid #343c52;
   border-radius: 10px;
   background: #101721;
@@ -1435,17 +1467,19 @@ select {
 
 .stats-detail-text strong {
   color: #eef2ff;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.15;
 }
 
 .stats-detail-text span {
   color: #8f98ad;
   font-size: 11px;
+  line-height: 1.1;
 }
 
 .stats-detail-amount {
   color: #eef2ff;
-  font-size: 12px;
+  font-size: 14px;
   white-space: nowrap;
 }
 
