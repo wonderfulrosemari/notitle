@@ -19,7 +19,17 @@
         </div>
 
         <div class="calendar-grid">
-          <article v-for="cell in calendarCells" :key="cell.key" :class="['day-cell', cell.hasData ? 'has-data' : '', cell.isToday ? 'today' : '']">
+          <article
+            v-for="cell in calendarCells"
+            :key="cell.key"
+            :class="[
+              'day-cell',
+              cell.hasData ? 'has-data' : '',
+              cell.balanceState === 'positive' ? 'balance-positive' : '',
+              cell.balanceState === 'negative' ? 'balance-negative' : '',
+              cell.isToday ? 'today' : '',
+            ]"
+          >
             <template v-if="cell.day">
               <div class="day-head">{{ monthNumber }}/{{ cell.day }}</div>
               <div v-if="cell.hasData" class="amount-list">
@@ -112,6 +122,8 @@ const calendarCells = computed(() => {
       income: bucket.income,
       expense: bucket.expense,
       balance,
+      balanceState:
+        balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'neutral',
       hasData: bucket.income > 0 || bucket.expense > 0,
       isToday: date === today,
     })
