@@ -105,6 +105,8 @@ export function useLedger() {
       .sort((a, b) => {
         let compare = 0;
         if (state.sortBy === 'date') compare = a.date.localeCompare(b.date);
+        else if (state.sortBy === 'category')
+          compare = a.category.localeCompare(b.category, 'ko');
         else if (state.sortBy === 'amount')
           compare = getSignedAmount(a) - getSignedAmount(b);
 
@@ -393,7 +395,7 @@ export function useLedger() {
       }
     },
     sortMark: (key) => {
-      if (state.sortBy !== key) return '↕';
+      if (state.sortBy !== key) return '▼';
       return state.sortOrder === 'asc' ? '▲' : '▼';
     },
   });

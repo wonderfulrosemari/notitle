@@ -97,14 +97,7 @@
                 </button>
               </th>
               <th class="memo-col">
-                <button
-                  class="sort-trigger"
-                  type="button"
-                  @click="ledger.toggleSort('memo')"
-                >
-                  메모
-                  <span class="sort-mark">{{ ledger.sortMark('memo') }}</span>
-                </button>
+                메모
               </th>
               <th class="actions-col">수정</th>
             </tr>
