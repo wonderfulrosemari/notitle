@@ -129,6 +129,11 @@ select {
   padding: 20px 16px 88px;
 }
 
+.ledger-page-compact {
+  box-sizing: border-box;
+  padding: 12px 16px 72px;
+}
+
 .ledger-shell {
   width: 100%;
   margin: 0;
@@ -138,6 +143,11 @@ select {
   box-shadow: 0 18px 30px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
+}
+
+.ledger-shell-compact {
+  display: flex;
+  flex-direction: column;
 }
 
 .stats-page {
@@ -323,6 +333,10 @@ select {
   padding: 0 0 10px;
 }
 
+.ledger-shell-compact .table-zone {
+  padding: 0 0 6px;
+}
+
 .table-tools {
   display: flex;
   align-items: center;
@@ -330,6 +344,11 @@ select {
   padding: 12px 16px;
   color: var(--text-sub);
   font-size: 12px;
+}
+
+.ledger-shell-compact .table-tools {
+  gap: 8px;
+  padding: 9px 14px;
 }
 
 .range-text {
@@ -367,6 +386,10 @@ select {
   text-align: center;
 }
 
+.ledger-shell-compact .ledger-table thead th {
+  padding: 10px 12px;
+}
+
 .sort-trigger {
   display: inline-flex;
   align-items: center;
@@ -396,6 +419,12 @@ select {
   color: var(--text-main); 
   text-align: center;
   vertical-align: middle;
+}
+
+.ledger-shell-compact .ledger-table tbody td {
+  padding: 11px 10px;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .ledger-table tbody tr:hover {
@@ -450,6 +479,14 @@ select {
   gap: 6px;
 }
 
+.ledger-shell-compact .actions {
+  gap: 4px;
+}
+
+.ledger-shell-compact .actions .table-btn {
+  padding: 5px 8px;
+}
+
 .empty-row {
   text-align: center;
   color: var(--text-sub);
@@ -464,6 +501,10 @@ select {
   padding: 14px 12px 6px;
 }
 
+.ledger-shell-compact .pagination {
+  padding: 10px 10px 2px;
+}
+
 .page-btn {
   min-width: 36px;
   height: 32px;
@@ -473,6 +514,12 @@ select {
   background: var(--page-btn-bg);
   color: var(--page-btn-text);
   cursor: pointer;
+}
+
+.ledger-shell-compact .page-btn {
+  min-width: 32px;
+  height: 30px;
+  padding: 0 8px;
 }
 
 .page-btn:hover:not(:disabled) {
@@ -500,6 +547,11 @@ select {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.ledger-page-compact + .fab-stack {
+  right: 20px;
+  bottom: 18px;
 }
 
 .fab {
@@ -1035,6 +1087,18 @@ select {
   }
 }
 
+@media (min-width: 721px) {
+  .ledger-page-compact {
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .ledger-shell-compact {
+    height: 100%;
+  }
+}
+
 @media (max-width: 720px) {
   .app-layout {
     grid-template-columns: 1fr;
@@ -1076,6 +1140,10 @@ select {
     padding: 12px 8px 90px;
   }
 
+  .ledger-page-compact {
+    padding: 10px 8px 76px;
+  }
+
   .stats-page {
     padding: 12px 8px 16px;
   }
@@ -1094,6 +1162,29 @@ select {
   }
 
   .filters {
+    padding: 10px 8px;
+  }
+
+  .ledger-shell-compact .filters {
+    padding: 8px 10px;
+  }
+
+  .ledger-shell-compact .table-tools {
+    padding: 8px 10px;
+    flex-wrap: wrap;
+  }
+
+  .ledger-shell-compact .range-text {
+    width: 100%;
+    margin-left: 0;
+    text-align: right;
+  }
+
+  .ledger-shell-compact .ledger-table thead th {
+    padding: 9px 8px;
+  }
+
+  .ledger-shell-compact .ledger-table tbody td {
     padding: 10px 8px;
   }
 
