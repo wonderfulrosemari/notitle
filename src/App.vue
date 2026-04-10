@@ -28,15 +28,12 @@
           <span>설정</span>
         </RouterLink>
       </nav>
+      <button class="app-logout-btn side-logout-btn" type="button" @click="handleLogout">
+        로그아웃
+      </button>
     </aside>
 
     <section class="app-content">
-      <header class="app-toolbar">
-        <button class="app-logout-btn" type="button" @click="handleLogout">
-          로그아웃
-        </button>
-      </header>
-
       <RouterView />
     </section>
   </div>

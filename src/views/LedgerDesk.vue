@@ -128,7 +128,7 @@
               <td class="memo-col">{{ item.memo || '-' }}</td>
               <td class="actions actions-col">
                 <button class="table-btn" type="button" @click="openEdit(item)">
-                  편집
+                  수정
                 </button>
                 <button
                   class="table-btn danger"

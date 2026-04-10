@@ -1,6 +1,6 @@
 <template>
-  <main class="ledger-page">
-    <section class="ledger-shell">
+  <main class="ledger-page stats-page">
+    <section class="ledger-shell stats-shell">
       <header class="ledger-top">
         <div class="title-wrap">
           <p class="title">통계</p>
@@ -12,11 +12,12 @@
           <div class="month-chip">{{ monthLabel }}</div>
           <button class="icon-btn" type="button" @click="ledger.moveMonth(1)">&#62;</button>
         </div>
+
       </header>
 
       <section class="summary-cards stats-summary-cards">
         <article class="metric">
-          <p>전체 ({{ monthTransactions.length }})</p>
+          <p>이번 달 거래 건수 ({{ monthTransactions.length }})</p>
           <strong>{{ formatWon(monthSummary.total) }}</strong>
         </article>
         <article class="metric">
@@ -28,7 +29,7 @@
           <strong class="expense">{{ formatWon(monthSummary.expense) }}</strong>
         </article>
         <article class="metric">
-          <p>여유</p>
+          <p>잔액</p>
           <strong :class="monthSummary.balance >= 0 ? 'income' : 'expense'">
             {{ formatWon(monthSummary.balance) }}
           </strong>
