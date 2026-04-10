@@ -193,6 +193,20 @@ export function useLedger() {
     ];
   };
 
+  const updateTransaction = async (id, payload) => {
+    const userId = requireUserId();
+    const emoji = getEmojiByName(payload.category);
+    const response = await api.patch(`/transactions/${id}`, {
+      ...payload,
+      userId,
+      emoji,
+    });
+
+    transactions.value = transactions.value.map((item) =>
+      item.id === String(id) ? normalizeTransaction(response.data) : item,
+    );
+  };
+
   const removeTransaction = async (item) => {
     if (!item) return;
     const tId = item.id;
@@ -366,6 +380,7 @@ export function useLedger() {
     categories,
     fetchTransactions,
     addTransaction,
+    updateTransaction,
     removeTransaction,
     removeSelected,
     toggleSelection,
