@@ -49,7 +49,7 @@
 
         <article class="stats-panel">
           <div class="stats-panel-head">
-            <h3>{{ monthLabel }} 지출 카테고리 비율</h3>
+            <h3>{{ monthLabel }} 지출 카테고리 비율 TOP3</h3>
           </div>
 
           <div v-if="topCategoryBreakdown.length > 0" class="stats-pie-layout">
@@ -370,7 +370,6 @@ const lineChartData = computed(() => {
         pointHoverRadius: 6,
         tension: 0.35,
         fill: false,
-        hidden: true,
         order: 1
       }
     ]

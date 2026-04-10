@@ -39,6 +39,7 @@ const defaultCategories = [
 ];
 const defaultIncomeCategories = ['급여', '부수입', '환급', '용돈', '기타'];
 const PAGE_SIZE = 10;
+const PAGE_GROUP_SIZE = 5;
 const OTHER_CATEGORY_NAME = '기타';
 
 const pad = (value) => String(value).padStart(2, '0');
@@ -72,6 +73,21 @@ const normalizeTransaction = (item) => ({
   regularId: item.regularId || null,
 });
 
+const normalizeRegular = (item) => ({
+  id: String(item.id),
+  payDay: normalizePayDay(item.payDay),
+  type: item.type === 'income' ? 'income' : 'expense',
+  category: item.category || OTHER_CATEGORY_NAME,
+  amount: Number(item.amount || 0),
+  memo: item.memo || '',
+  emoji: item.emoji || '✨',
+  userId: String(item.userId || ''),
+  startMonth:
+    item.startMonth
+    || (item.createdAt ? formatMonth(new Date(item.createdAt)) : formatMonth(new Date())),
+  createdAt: Number(item.createdAt || Date.now()),
+});
+
 const getSignedAmount = (item) => {
   const amount = Number(item.amount || 0);
   return item.type === 'income' ? amount : -amount;
@@ -92,6 +108,12 @@ const compareCategoryNames = (left, right) => {
 
 const sortCategoriesWithOtherLast = (items) =>
   [...items].sort((left, right) => compareCategoryNames(left.name, right.name));
+const sortRegulars = (items) =>
+  [...items].sort(
+    (left, right) =>
+      normalizePayDay(left.payDay) - normalizePayDay(right.payDay)
+      || right.createdAt - left.createdAt,
+  );
 
 export function useLedger() {
   const auth = useAuth();
@@ -163,8 +185,22 @@ export function useLedger() {
     () => Math.ceil(filteredTransactions.value.length / PAGE_SIZE) || 1,
   );
 
-  const pageNumbers = computed(() =>
-    Array.from({ length: totalPages.value }, (_, index) => index + 1),
+  const pageGroupStart = computed(
+    () => Math.floor((state.page - 1) / PAGE_GROUP_SIZE) * PAGE_GROUP_SIZE + 1,
+  );
+
+  const pageNumbers = computed(() => {
+    const count = Math.min(
+      PAGE_GROUP_SIZE,
+      totalPages.value - pageGroupStart.value + 1,
+    );
+
+    return Array.from({ length: count }, (_, index) => pageGroupStart.value + index);
+  });
+
+  const hasPrevPageGroup = computed(() => pageGroupStart.value > 1);
+  const hasNextPageGroup = computed(
+    () => pageGroupStart.value + PAGE_GROUP_SIZE <= totalPages.value,
   );
 
   const statusMessage = computed(() => {
@@ -207,7 +243,7 @@ export function useLedger() {
 
   const addTransaction = async (payload) => {
     const userId = requireUserId();
-    const emoji = getEmojiByName(payload.category);
+    const emoji = getEmojiByName(payload.category, payload.type);
     const response = await api.post('/transactions', {
       ...payload,
       userId,
@@ -222,7 +258,7 @@ export function useLedger() {
 
   const updateTransaction = async (id, payload) => {
     const userId = requireUserId();
-    const emoji = getEmojiByName(payload.category);
+    const emoji = getEmojiByName(payload.category, payload.type);
     const response = await api.patch(`/transactions/${id}`, {
       ...payload,
       userId,
@@ -234,6 +270,40 @@ export function useLedger() {
     );
   };
 
+  const deleteRegularBundle = async (regularId, userId) => {
+    const normalizedRegularId = String(regularId);
+    const relatedTransactions = await api.get('/transactions', {
+      params: {
+        userId,
+        regularId: normalizedRegularId,
+      },
+    });
+
+    await Promise.all(
+      relatedTransactions.data.map((transaction) =>
+        api.delete(`/transactions/${transaction.id}`),
+      ),
+    );
+
+    try {
+      await api.delete(`/regulars/${normalizedRegularId}`);
+    } catch (error) {
+      if (error?.response?.status !== 404) {
+        throw error;
+      }
+    }
+
+    transactions.value = transactions.value.filter(
+      (item) => item.regularId !== normalizedRegularId,
+    );
+    regulars.value = regulars.value.filter(
+      (item) => item.id !== normalizedRegularId,
+    );
+    state.selectedIds = state.selectedIds.filter((selectedId) =>
+      transactions.value.some((item) => item.id === selectedId),
+    );
+  };
+
   const removeTransaction = async (item) => {
     if (!item) return;
     const tId = item.id;
@@ -242,30 +312,7 @@ export function useLedger() {
     try {
       if (rId) {
         const userId = requireUserId();
-        const relatedTransactions = await api.get('/transactions', {
-          params: {
-            userId,
-            regularId: rId,
-          },
-        });
-
-        await Promise.all(
-          relatedTransactions.data.map((transaction) =>
-            api.delete(`/transactions/${transaction.id}`),
-          ),
-        );
-
-        try {
-          await api.delete(`/regulars/${rId}`);
-        } catch (error) {
-          if (error?.response?.status !== 404) {
-            throw error;
-          }
-        }
-
-        transactions.value = transactions.value.filter(
-          (t) => t.regularId !== rId,
-        );
+        await deleteRegularBundle(rId, userId);
         return;
       }
 
@@ -325,6 +372,8 @@ export function useLedger() {
       const targetYM = state.monthCursor;
       const [targetYear, targetMonth] = targetYM.split('-').map(Number);
 
+      regulars.value = sortRegulars(regRes.data.map(normalizeRegular));
+
       for (const reg of regRes.data) {
         const startMonth = reg.startMonth
           || (reg.createdAt ? formatMonth(new Date(reg.createdAt)) : '');
@@ -366,10 +415,24 @@ export function useLedger() {
     categories.value = sortCategoriesWithOtherLast(response.data);
   };
 
-  const getEmojiByName = (name) => {
-    const found = categories.value.find((c) => c.name === name);
+  const fetchRegulars = async () => {
+    const userId = requireUserId();
+    const response = await api.get('/regulars', { params: { userId } });
+    regulars.value = sortRegulars(response.data.map(normalizeRegular));
+  };
+
+  const getEmojiByName = (name, type = null) => {
+    const found = categories.value.find(
+      (c) =>
+        c.name === name && (!type || c.type === type || c.type === 'common'),
+    ) || categories.value.find((c) => c.name === name);
     return found ? found.emoji : '✨';
   };
+
+  const getCategoriesByType = (type) =>
+    categories.value.filter(
+      (item) => item.type === type || item.type === 'common',
+    );
 
   const addRegular = async (payload) => {
     const userId = requireUserId();
@@ -380,7 +443,9 @@ export function useLedger() {
       startMonth: formatMonth(new Date()),
       createdAt: Date.now(),
     });
-    return response.data;
+    const regular = normalizeRegular(response.data);
+    regulars.value = sortRegulars([...regulars.value, regular]);
+    return regular;
   };
 
   const moveMonth = (offset) => {
@@ -393,6 +458,11 @@ export function useLedger() {
     state.sortBy = 'date';
     state.sortOrder = 'desc';
     state.page = 1;
+  };
+
+  const removeRegular = async (regularId) => {
+    const userId = requireUserId();
+    await deleteRegularBundle(regularId, userId);
   };
 
   const addCategory = async (payload) => {
@@ -463,15 +533,34 @@ export function useLedger() {
     },
   );
 
+  watch(totalPages, (nextTotalPages) => {
+    if (state.page > nextTotalPages) {
+      state.page = nextTotalPages;
+    }
+  });
+
+  watch(currentUserId, (nextUserId, prevUserId) => {
+    if (nextUserId === prevUserId) return;
+
+    transactions.value = [];
+    regulars.value = [];
+    state.page = 1;
+    state.selectedIds = [];
+  });
+
   return reactive({
     state,
     transactions,
+    regulars,
     loading,
     statusMessage,
+    currentRange,
     filteredTransactions,
     pagedTransactions,
     totalPages,
     pageNumbers,
+    hasPrevPageGroup,
+    hasNextPageGroup,
     summary,
     selectedCount,
     allSelected,
@@ -485,8 +574,11 @@ export function useLedger() {
     selectAllVisible,
     checkAndSyncRegulars,
     fetchCategories,
+    fetchRegulars,
     getEmojiByName,
+    getCategoriesByType,
     addRegular,
+    removeRegular,
     moveMonth,
     resetSortToLatest,
     buildRegularTargetDate,
@@ -500,6 +592,14 @@ export function useLedger() {
     },
     nextPage: () => {
       if (state.page < totalPages.value) state.page++;
+    },
+    prevPageGroup: () => {
+      if (!hasPrevPageGroup.value) return;
+      state.page = Math.max(pageGroupStart.value - PAGE_GROUP_SIZE, 1);
+    },
+    nextPageGroup: () => {
+      if (!hasNextPageGroup.value) return;
+      state.page = pageGroupStart.value + PAGE_GROUP_SIZE;
     },
     toggleSort: (key) => {
       if (state.sortBy === key)

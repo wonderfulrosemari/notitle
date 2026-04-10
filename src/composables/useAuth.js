@@ -104,9 +104,13 @@ export function useAuth() {
     return user;
   };
 
-  const updatePassword = async (nextPassword) => {
+  const updatePassword = async (currentPassword, nextPassword) => {
     if (!state.currentUser?.id) {
       throw new Error('로그인한 사용자 정보가 없습니다.');
+    }
+
+    if (String(state.currentUser.password) !== String(currentPassword).trim()) {
+      throw new Error('현재 비밀번호가 일치하지 않습니다.');
     }
 
     const trimmedPassword = nextPassword.trim();

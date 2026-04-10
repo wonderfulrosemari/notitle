@@ -20,6 +20,16 @@
 
       <form class="profile-form" @submit.prevent="submitPasswordChange">
         <label class="profile-field">
+          <span>현재 비밀번호</span>
+          <input
+            v-model="form.currentPassword"
+            type="password"
+            placeholder="현재 비밀번호를 입력해주세요"
+            required
+          />
+        </label>
+
+        <label class="profile-field">
           <span>새 비밀번호</span>
           <input
             v-model="form.password"
@@ -56,6 +66,7 @@ import { useAuth } from '../composables/useAuth';
 const auth = useAuth();
 
 const form = reactive({
+  currentPassword: '',
   password: '',
   passwordConfirm: '',
 });
@@ -63,13 +74,18 @@ const form = reactive({
 const statusMessage = ref('');
 
 function resetForm() {
+  form.currentPassword = '';
   form.password = '';
   form.passwordConfirm = '';
 }
 
 async function submitPasswordChange() {
-  if (!form.password.trim() || !form.passwordConfirm.trim()) {
-    statusMessage.value = '새 비밀번호와 비밀번호 확인을 모두 입력해주세요.';
+  if (
+    !form.currentPassword.trim()
+    || !form.password.trim()
+    || !form.passwordConfirm.trim()
+  ) {
+    statusMessage.value = '현재 비밀번호와 새 비밀번호를 모두 입력해주세요.';
     return;
   }
 
@@ -79,7 +95,7 @@ async function submitPasswordChange() {
   }
 
   try {
-    await auth.updatePassword(form.password);
+    await auth.updatePassword(form.currentPassword, form.password);
     resetForm();
     statusMessage.value = '비밀번호가 변경되었습니다.';
   } catch (error) {

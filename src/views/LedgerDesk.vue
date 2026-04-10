@@ -153,8 +153,8 @@
           <button
             class="page-btn"
             type="button"
-            :disabled="ledger.state.page === 1"
-            @click="ledger.prevPage"
+            :disabled="!ledger.hasPrevPageGroup"
+            @click="ledger.prevPageGroup"
           >
             이전
           </button>
@@ -171,8 +171,8 @@
           <button
             class="page-btn"
             type="button"
-            :disabled="ledger.state.page === ledger.totalPages"
-            @click="ledger.nextPage"
+            :disabled="!ledger.hasNextPageGroup"
+            @click="ledger.nextPageGroup"
           >
             다음
           </button>
@@ -206,7 +206,7 @@
             카테고리
             <select v-model="form.category">
               <option
-                v-for="cat in ledger.categories"
+                v-for="cat in availableFormCategories"
                 :key="cat.id"
                 :value="cat.name"
               >
@@ -313,12 +313,30 @@ const monthLabel = computed(() => {
   return `${year}-${month}`;
 });
 
+const availableFormCategories = computed(() =>
+  ledger.getCategoriesByType(form.type),
+);
+
+const syncFormCategory = () => {
+  if (availableFormCategories.value.length === 0) {
+    form.category = '';
+    return;
+  }
+
+  const hasCurrent = availableFormCategories.value.some(
+    (item) => item.name === form.category,
+  );
+
+  if (!hasCurrent) {
+    form.category = availableFormCategories.value[0].name;
+  }
+};
+
 const resetForm = () => {
   const today = new Date().toISOString().slice(0, 10);
   form.date = today;
   form.type = 'expense';
-  form.category =
-    ledger.categories.length > 0 ? ledger.categories[0].name : '식비';
+  syncFormCategory();
   form.amount = 0;
   form.memo = '';
 };
@@ -459,23 +477,21 @@ const formatCurrency = (value) =>
   }).format(value || 0)}원`;
 
 watch(
-  () => form.type,
-  (type) => {
-    if (ledger.categories.length > 0) {
-      form.category = ledger.categories[0].name;
-    }
+  availableFormCategories,
+  () => {
+    syncFormCategory();
   },
+  { immediate: true },
 );
 
 onMounted(async () => {
   if (!currentUserId.value) return;
 
   try {
-    resetForm();
-
     await ledger.checkAndSyncRegulars();
 
     await Promise.all([ledger.fetchTransactions(), ledger.fetchCategories()]);
+    resetForm();
   } catch (error) {
     console.error('내역 로딩 중 오류:', error);
   }
