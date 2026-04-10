@@ -176,6 +176,19 @@ const pieColors = [
   '#f472b6'
 ]
 
+const compareCategoryNames = (left, right) => {
+  const leftName = String(left || '기타')
+  const rightName = String(right || '기타')
+  const leftIsOther = leftName === '기타'
+  const rightIsOther = rightName === '기타'
+
+  if (leftIsOther !== rightIsOther) {
+    return leftIsOther ? 1 : -1
+  }
+
+  return leftName.localeCompare(rightName, 'ko')
+}
+
 const allTransactions = computed(() => {
   if (Array.isArray(ledger.transactions)) return ledger.transactions
   if (Array.isArray(ledger.state?.transactions)) return ledger.state.transactions
@@ -255,7 +268,13 @@ const categoryBreakdown = computed(() => {
   const totalExpense = monthSummary.value.expense || 0
 
   return Object.values(grouped)
-    .sort((a, b) => b.amount - a.amount)
+    .sort((a, b) => {
+      if (a.category === '기타' || b.category === '기타') {
+        return compareCategoryNames(a.category, b.category)
+      }
+
+      return b.amount - a.amount
+    })
     .map((item, index) => ({
       ...item,
       color: pieColors[index % pieColors.length],

@@ -24,7 +24,7 @@
           <span>프로필</span>
         </RouterLink>
         <RouterLink to="/setting" class="menu-item">
-          <span class="menu-icon">S</span>
+          <span class="menu-icon">E</span>
           <span>설정</span>
         </RouterLink>
       </nav>

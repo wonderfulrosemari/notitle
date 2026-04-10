@@ -88,7 +88,11 @@ import { useAuth } from '../composables/useAuth';
 
 const ledger = useLedger();
 const auth = useAuth();
-const { budget, fetchUserBudget } = useSettings();
+const { budget, budgetAlertEnabled, fetchUserBudget } = useSettings();
+const budgetAlertKey = computed(() => {
+  const userId = auth.state.currentUser?.id;
+  return userId ? `kb-budget-alert:${userId}` : '';
+});
 
 const normalizeDate = (value) => {
   if (!value) return '';
@@ -151,7 +155,14 @@ const dashboardStatus = computed(() => {
 });
 
 const checkBudgetExceeded = () => {
-  if (budget.value > 0 && currentMonthExpense.value > budget.value) {
+  if (
+    budgetAlertEnabled.value &&
+    currentMonthExpense.value > budget.value &&
+    typeof window !== 'undefined' &&
+    budgetAlertKey.value &&
+    !window.sessionStorage.getItem(budgetAlertKey.value)
+  ) {
+    window.sessionStorage.setItem(budgetAlertKey.value, 'shown');
     setTimeout(() => {
       alert(
         `⚠️ 예산 초과 알림\n\n목표 예산(${budget.value.toLocaleString()}원)보다 ` +
