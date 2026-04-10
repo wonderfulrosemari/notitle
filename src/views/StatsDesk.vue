@@ -17,7 +17,7 @@
 
       <section class="summary-cards stats-summary-cards">
         <article class="metric">
-          <p>이번 달 거래 건수 ({{ monthTransactions.length }})</p>
+          <p>이번 달 거래 금액</p>
           <strong>{{ formatWon(monthSummary.total) }}</strong>
         </article>
         <article class="metric">
@@ -39,7 +39,7 @@
       <section class="stats-grid">
         <article class="stats-panel stats-panel-wide">
           <div class="stats-panel-head">
-            <h3>{{ selectedYear }}년 월별 지출 추이</h3>
+            <h3>{{ selectedYear }}년 월별 추이</h3>
           </div>
 
           <div class="stats-chart-box stats-line-box">
@@ -305,6 +305,24 @@ const yearlyExpenseTotals = computed(() => {
   return totals
 })
 
+const yearlyIncomeTotals = computed(() => {
+  const totals = Array(12).fill(0)
+
+  allTransactions.value.forEach((item) => {
+    if (!item?.date) return
+
+    const date = new Date(item.date)
+    if (Number.isNaN(date.getTime())) return
+    if (date.getFullYear() !== selectedYear.value) return
+    if (String(item.type).toLowerCase() !== 'income') return
+
+    const monthIndex = date.getMonth()
+    totals[monthIndex] += Number(item.amount) || 0
+  })
+
+  return totals
+})
+
 const lineChartData = computed(() => {
   return {
     labels: monthLabels,
@@ -319,7 +337,22 @@ const lineChartData = computed(() => {
         pointRadius: 4,
         pointHoverRadius: 6,
         tension: 0.35,
-        fill: false
+        fill: false,
+        order: 1
+      },
+      {
+        label: '수입',
+        data: yearlyIncomeTotals.value,
+        borderColor: '#76c7ff',
+        backgroundColor: '#76c7ff',
+        pointBackgroundColor: '#76c7ff',
+        pointBorderColor: '#76c7ff',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.35,
+        fill: false,
+        hidden: true,
+        order: 1
       }
     ]
   }
