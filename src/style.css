@@ -47,6 +47,10 @@
   --calendar-income-accent: #61dfba;
   --calendar-expense-accent: #ff99a6;
   --calendar-balance-divider: rgba(157, 177, 212, 0.4);
+  --calendar-positive-cell-bg: linear-gradient(180deg, #1a3022 0%, #15281c 100%);
+  --calendar-positive-cell-ring: #4d8b5f;
+  --calendar-negative-cell-bg: linear-gradient(180deg, #331f27 0%, #28161d 100%);
+  --calendar-negative-cell-ring: #9a5968;
 }
 
 :root.theme-kb,
@@ -98,6 +102,10 @@ body.theme-kb {
   --calendar-income-accent: #0f766e;
   --calendar-expense-accent: #be123c;
   --calendar-balance-divider: rgba(100, 116, 139, 0.35);
+  --calendar-positive-cell-bg: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+  --calendar-positive-cell-ring: #86cc9c;
+  --calendar-negative-cell-bg: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+  --calendar-negative-cell-ring: #f3a8b8;
 }
 
 * {
@@ -1050,11 +1058,26 @@ select {
   box-shadow: inset 0 0 0 2px var(--calendar-has-data-ring);
 }
 
+.day-cell.has-data.balance-positive {
+  background: var(--calendar-positive-cell-bg);
+  box-shadow: inset 0 0 0 2px var(--calendar-positive-cell-ring);
+}
+
+.day-cell.has-data.balance-negative {
+  background: var(--calendar-negative-cell-bg);
+  box-shadow: inset 0 0 0 2px var(--calendar-negative-cell-ring);
+}
+
 .day-cell.today {
   box-shadow: inset 0 0 0 2px var(--income-color);
 }
 
 .day-cell.has-data.today {
+  box-shadow: inset 0 0 0 2px var(--calendar-has-data-today-ring);
+}
+
+.day-cell.has-data.balance-positive.today,
+.day-cell.has-data.balance-negative.today {
   box-shadow: inset 0 0 0 2px var(--calendar-has-data-today-ring);
 }
 
