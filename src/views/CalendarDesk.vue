@@ -42,26 +42,22 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useLedger } from '../composables/useLedger'
 
 const ledger = useLedger()
 
-const calendarState = reactive({
-  monthCursor: new Date().toISOString().slice(0, 7),
-})
-
 const weekdays = ['월', '화', '수', '목', '금', '토', '일']
 
-const monthNumber = computed(() => Number(calendarState.monthCursor.split('-')[1]))
+const monthNumber = computed(() => Number(ledger.state.monthCursor.split('-')[1]))
 
 const monthLabel = computed(() => {
-  const [year, month] = calendarState.monthCursor.split('-')
+  const [year, month] = ledger.state.monthCursor.split('-')
   return `${year}-${month}`
 })
 
 const monthMeta = computed(() => {
-  const [year, month] = calendarState.monthCursor.split('-').map(Number)
+  const [year, month] = ledger.state.monthCursor.split('-').map(Number)
   const first = new Date(year, month - 1, 1)
   const last = new Date(year, month, 0)
   const firstWeekday = (first.getDay() + 6) % 7
@@ -76,7 +72,7 @@ const monthMeta = computed(() => {
 
 const totalsByDate = computed(() => {
   const map = new Map()
-  const prefix = `${calendarState.monthCursor}-`
+  const prefix = `${ledger.state.monthCursor}-`
 
   for (const item of ledger.transactions) {
     if (!item.date?.startsWith(prefix)) continue
@@ -136,9 +132,7 @@ function formatAmount(value) {
 }
 
 function moveMonth(offset) {
-  const [year, month] = calendarState.monthCursor.split('-').map(Number)
-  const moved = new Date(year, month - 1 + offset, 1)
-  calendarState.monthCursor = `${moved.getFullYear()}-${String(moved.getMonth() + 1).padStart(2, '0')}`
+  ledger.moveMonth(offset)
 }
 
 onMounted(async () => {
