@@ -48,6 +48,16 @@ const formatDate = (date) => {
   const day = pad(date.getDate());
   return `${year}-${month}-${day}`;
 };
+const formatMonth = (date) => formatDate(date).slice(0, 7);
+const normalizePayDay = (value) => {
+  const payDay = Number(value) || 1;
+  return Math.min(Math.max(payDay, 1), 31);
+};
+const buildRegularTargetDate = (year, month, payDay) => {
+  const lastDay = new Date(year, month, 0).getDate();
+  const targetDay = Math.min(normalizePayDay(payDay), lastDay);
+  return `${year}-${pad(month)}-${pad(targetDay)}`;
+};
 
 const normalizeTransaction = (item) => ({
   id: String(item.id),
@@ -231,21 +241,40 @@ export function useLedger() {
 
     try {
       if (rId) {
-        await api
-          .delete(`/regulars/${rId}`)
-          .catch(() => console.log('이미 처리된 규칙'));
-      }
-      await api.delete(`/transactions/${tId}`);
+        const userId = requireUserId();
+        const relatedTransactions = await api.get('/transactions', {
+          params: {
+            userId,
+            regularId: rId,
+          },
+        });
 
-      if (rId) {
+        await Promise.all(
+          relatedTransactions.data.map((transaction) =>
+            api.delete(`/transactions/${transaction.id}`),
+          ),
+        );
+
+        try {
+          await api.delete(`/regulars/${rId}`);
+        } catch (error) {
+          if (error?.response?.status !== 404) {
+            throw error;
+          }
+        }
+
         transactions.value = transactions.value.filter(
           (t) => t.regularId !== rId,
         );
-      } else {
-        transactions.value = transactions.value.filter((t) => t.id !== tId);
+        return;
       }
+
+      await api.delete(`/transactions/${tId}`);
+
+      transactions.value = transactions.value.filter((t) => t.id !== tId);
     } catch (e) {
       console.error('삭제 에러:', e);
+      throw e;
     }
   };
 
@@ -294,9 +323,21 @@ export function useLedger() {
       ]);
 
       const targetYM = state.monthCursor;
+      const [targetYear, targetMonth] = targetYM.split('-').map(Number);
 
       for (const reg of regRes.data) {
-        const targetDate = `${targetYM}-${String(reg.payDay).padStart(2, '0')}`;
+        const startMonth = reg.startMonth
+          || (reg.createdAt ? formatMonth(new Date(reg.createdAt)) : '');
+
+        if (startMonth && targetYM < startMonth) {
+          continue;
+        }
+
+        const targetDate = buildRegularTargetDate(
+          targetYear,
+          targetMonth,
+          reg.payDay,
+        );
 
         const isExist = transRes.data.some(
           (t) => t.date === targetDate && t.regularId === reg.id,
@@ -335,6 +376,8 @@ export function useLedger() {
     const response = await api.post('/regulars', {
       ...payload,
       userId,
+      payDay: normalizePayDay(payload.payDay),
+      startMonth: formatMonth(new Date()),
       createdAt: Date.now(),
     });
     return response.data;
@@ -345,6 +388,13 @@ export function useLedger() {
     const date = new Date(year, month - 1 + offset, 1);
     state.monthCursor = `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
   };
+
+  const resetSortToLatest = () => {
+    state.sortBy = 'date';
+    state.sortOrder = 'desc';
+    state.page = 1;
+  };
+
   const addCategory = async (payload) => {
     try {
       const response = await api.post('/categories', {
@@ -438,6 +488,8 @@ export function useLedger() {
     getEmojiByName,
     addRegular,
     moveMonth,
+    resetSortToLatest,
+    buildRegularTargetDate,
     addCategory,
     removeCategory,
     goToPage: (p) => {
