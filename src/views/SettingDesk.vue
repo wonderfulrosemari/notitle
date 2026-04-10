@@ -19,6 +19,7 @@
               type="number"
               min="0"
               v-model.number="budgetDraft"
+              :disabled="!isBudgetAlertEnabled"
               placeholder="0"
               @change="handleBudgetChange"
             />
@@ -228,6 +229,7 @@ const clearBudgetAlertSession = () => {
 
 const handleBudgetChange = async () => {
   if (!currentUserId.value) return;
+  if (!isBudgetAlertEnabled.value) return;
 
   try {
     await updateUserBudget(
@@ -507,6 +509,15 @@ select {
 input:focus,
 select:focus {
   border-color: var(--point-color);
+}
+
+input:disabled,
+select:disabled {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text-sub);
+  border-color: var(--border-light);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* --- 이모지 피커 스타일 --- */
