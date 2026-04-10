@@ -11,7 +11,6 @@
           <button class="icon-btn" type="button" @click="ledger.moveMonth(-1)">&#60;</button>
           <div class="month-chip">{{ monthLabel }}</div>
           <button class="icon-btn" type="button" @click="ledger.moveMonth(1)">&#62;</button>
-          <button class="plain-btn" type="button" @click="ledger.focusCurrentMonth">이번 달</button>
         </div>
       </header>
 

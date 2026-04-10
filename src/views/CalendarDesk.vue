@@ -2,7 +2,7 @@
   <main class="ledger-page">
     <section class="calendar-shell">
       <header class="calendar-top">
-        <div>
+        <div class="title-wrap">
           <p class="title">캘린더</p>
         </div>
 
