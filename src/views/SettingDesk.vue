@@ -382,6 +382,17 @@ onUnmounted(() => {
   background: var(--bg-sub);
 }
 
+.header-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+}
+
 .label {
   font-weight: 600;
   font-size: 15px;
