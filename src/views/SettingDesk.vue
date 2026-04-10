@@ -12,13 +12,34 @@
       </div>
 
       <div v-if="activeMenu === 'budget'" class="item-content">
-        <div class="flex-row">
-          <input
-            type="number"
-            v-model="budget"
-            placeholder="월 목표 예산 입력"
-          />
-          <button @click="handleSaveBudget" class="solid-btn">저장</button>
+        <div class="form-container budget-form">
+          <div class="field">
+            <label>총 지출액</label>
+            <input
+              type="number"
+              min="0"
+              v-model.number="budgetDraft"
+              placeholder="0"
+              @change="handleBudgetChange"
+            />
+          </div>
+
+          <div class="budget-actions">
+            <button
+              type="button"
+              class="budget-switch"
+              :class="{ active: isBudgetAlertEnabled }"
+              :aria-pressed="isBudgetAlertEnabled"
+              @click="handleToggleBudgetAlert"
+            >
+              <span class="budget-switch-track">
+                <span class="budget-switch-thumb"></span>
+              </span>
+              <span class="budget-switch-label">
+                {{ isBudgetAlertEnabled ? 'ON' : 'OFF' }}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -176,26 +197,59 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue';
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { useLedger } from '../composables/useLedger';
 import { useSettings } from '../composables/useSettings';
 import { useAuth } from '../composables/useAuth';
 
 const ledger = useLedger();
 const auth = useAuth();
-const { budget, fetchUserBudget, updateUserBudget } = useSettings();
+const {
+  budget,
+  budgetAlertEnabled,
+  fetchUserBudget,
+  updateUserBudget,
+  updateBudgetAlertEnabled,
+} = useSettings();
 
 const activeMenu = ref(null);
 const currentUserId = computed(() => auth.state.currentUser?.id);
+const budgetDraft = ref(0);
+const isBudgetAlertEnabled = computed(() => budgetAlertEnabled.value);
 
 const toggleMenu = (menuName) => {
   activeMenu.value = activeMenu.value === menuName ? null : menuName;
 };
 
-const handleSaveBudget = async () => {
+const clearBudgetAlertSession = () => {
+  if (typeof window === 'undefined' || !currentUserId.value) return;
+  window.sessionStorage.removeItem(`kb-budget-alert:${currentUserId.value}`);
+};
+
+const handleBudgetChange = async () => {
+  if (!currentUserId.value) return;
+
   try {
-    await updateUserBudget(currentUserId.value, budget.value);
-    alert('목표 예산이 저장되었습니다!');
+    await updateUserBudget(
+      currentUserId.value,
+      Math.max(0, Number(budgetDraft.value) || 0),
+    );
+    clearBudgetAlertSession();
+  } catch (error) {
+    alert('저장에 실패했습니다.');
+  }
+};
+
+const handleToggleBudgetAlert = async () => {
+  if (!currentUserId.value) return;
+
+  try {
+    await updateUserBudget(
+      currentUserId.value,
+      Math.max(0, Number(budgetDraft.value) || 0),
+    );
+    await updateBudgetAlertEnabled(currentUserId.value, !isBudgetAlertEnabled.value);
+    clearBudgetAlertSession();
   } catch (error) {
     alert('저장에 실패했습니다.');
   }
@@ -301,7 +355,7 @@ const handleDeleteCategory = async (id, name) => {
     try {
       await ledger.removeCategory(id);
     } catch (error) {
-      alert('삭제 실패');
+      alert(error.message || '삭제 실패');
     }
   }
 };
@@ -318,6 +372,14 @@ const setTheme = (theme) => {
   else document.body.classList.remove('theme-kb');
   localStorage.setItem('app-theme', theme);
 };
+
+watch(
+  budget,
+  (value) => {
+    budgetDraft.value = Number(value) || 0;
+  },
+  { immediate: true },
+);
 
 onMounted(async () => {
   await ledger.fetchCategories();
@@ -521,6 +583,61 @@ select:focus {
 .full-width {
   width: 100%;
   margin-top: 10px;
+}
+
+.budget-form {
+  gap: 16px;
+}
+
+.budget-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.budget-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.budget-switch-track {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+  transition: background 0.2s ease;
+}
+
+.budget-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.budget-switch.active .budget-switch-track {
+  background: var(--point-gradient);
+}
+
+.budget-switch.active .budget-switch-thumb {
+  transform: translateX(22px);
+}
+
+.budget-switch-label {
+  min-width: 34px;
+  text-align: right;
 }
 
 .category-tags {

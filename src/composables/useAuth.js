@@ -7,6 +7,7 @@ const api = axios.create({
 });
 
 const SESSION_KEY = 'kb-auth-user';
+const BUDGET_ALERT_KEY_PREFIX = 'kb-budget-alert:';
 
 const readSavedUser = () => {
   if (typeof window === 'undefined') return null;
@@ -34,6 +35,17 @@ const persistUser = (user) => {
   }
 
   window.sessionStorage.removeItem(SESSION_KEY);
+};
+
+const clearBudgetAlertFlags = () => {
+  if (typeof window === 'undefined') return;
+
+  for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.sessionStorage.key(index);
+    if (key?.startsWith(BUDGET_ALERT_KEY_PREFIX)) {
+      window.sessionStorage.removeItem(key);
+    }
+  }
 };
 
 const normalizeUser = (user) => ({
@@ -114,6 +126,7 @@ export function useAuth() {
   };
 
   const logout = () => {
+    clearBudgetAlertFlags();
     persistUser(null);
 
     // 260409 로그아웃할 때 기본 dark로 가게 수정했습니다.

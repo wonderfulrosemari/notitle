@@ -39,6 +39,7 @@ const defaultCategories = [
 ];
 const defaultIncomeCategories = ['급여', '부수입', '환급', '용돈', '기타'];
 const PAGE_SIZE = 10;
+const OTHER_CATEGORY_NAME = '기타';
 
 const pad = (value) => String(value).padStart(2, '0');
 const formatDate = (date) => {
@@ -65,6 +66,22 @@ const getSignedAmount = (item) => {
   const amount = Number(item.amount || 0);
   return item.type === 'income' ? amount : -amount;
 };
+
+const compareCategoryNames = (left, right) => {
+  const leftName = String(left || OTHER_CATEGORY_NAME);
+  const rightName = String(right || OTHER_CATEGORY_NAME);
+  const leftIsOther = leftName === OTHER_CATEGORY_NAME;
+  const rightIsOther = rightName === OTHER_CATEGORY_NAME;
+
+  if (leftIsOther !== rightIsOther) {
+    return leftIsOther ? 1 : -1;
+  }
+
+  return leftName.localeCompare(rightName, 'ko');
+};
+
+const sortCategoriesWithOtherLast = (items) =>
+  [...items].sort((left, right) => compareCategoryNames(left.name, right.name));
 
 export function useLedger() {
   const auth = useAuth();
@@ -106,7 +123,7 @@ export function useLedger() {
         let compare = 0;
         if (state.sortBy === 'date') compare = a.date.localeCompare(b.date);
         else if (state.sortBy === 'category')
-          compare = a.category.localeCompare(b.category, 'ko');
+          compare = compareCategoryNames(a.category, b.category);
         else if (state.sortBy === 'amount')
           compare = getSignedAmount(a) - getSignedAmount(b);
 
@@ -305,7 +322,7 @@ export function useLedger() {
 
   const fetchCategories = async () => {
     const response = await api.get('/categories');
-    categories.value = response.data;
+    categories.value = sortCategoriesWithOtherLast(response.data);
   };
 
   const getEmojiByName = (name) => {
@@ -335,7 +352,10 @@ export function useLedger() {
         id: `cat-${Date.now()}`,
       });
 
-      categories.value.push(response.data);
+      categories.value = sortCategoriesWithOtherLast([
+        ...categories.value,
+        response.data,
+      ]);
       return response.data;
     } catch (error) {
       console.error('카테고리 추가 실패:', error);
@@ -345,9 +365,37 @@ export function useLedger() {
 
   const removeCategory = async (id) => {
     try {
+      const userId = requireUserId();
+      const targetCategory = categories.value.find((cat) => cat.id === id);
+
+      if (!targetCategory) {
+        throw new Error('삭제할 카테고리를 찾을 수 없습니다.');
+      }
+
+      const [transactionResponse, regularResponse] = await Promise.all([
+        api.get('/transactions', {
+          params: {
+            userId,
+            category: targetCategory.name,
+          },
+        }),
+        api.get('/regulars', {
+          params: {
+            userId,
+            category: targetCategory.name,
+          },
+        }),
+      ]);
+
+      if (transactionResponse.data.length > 0 || regularResponse.data.length > 0) {
+        throw new Error('내역 또는 정기결제에서 사용 중인 카테고리는 삭제할 수 없습니다.');
+      }
+
       await api.delete(`/categories/${id}`);
 
-      categories.value = categories.value.filter((cat) => cat.id !== id);
+      categories.value = sortCategoriesWithOtherLast(
+        categories.value.filter((cat) => cat.id !== id),
+      );
     } catch (error) {
       console.error('카테고리 삭제 실패:', error);
       throw error;
