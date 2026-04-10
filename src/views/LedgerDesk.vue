@@ -1,6 +1,6 @@
 <template>
-  <main class="ledger-page">
-    <section class="ledger-shell">
+  <main class="ledger-page ledger-page-compact">
+    <section class="ledger-shell ledger-shell-compact">
       <header class="ledger-top">
         <div class="title-wrap">
           <p class="title">내역</p>
