@@ -915,8 +915,8 @@ select {
 }
 
 .calendar-top {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 20px;
   align-items: center;
   padding: 16px 18px;
@@ -1098,8 +1098,9 @@ select {
   }
 
   .calendar-top {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 12px;
   }
 
   .profile-page {
