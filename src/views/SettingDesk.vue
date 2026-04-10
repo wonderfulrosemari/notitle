@@ -62,11 +62,15 @@
           <div class="input-grid">
             <div class="field">
               <label>결제일</label>
-              <select v-model.number="newRegular.payDay">
-                <option v-for="d in 28" :key="d" :value="d">
-                  매월 {{ d }}일
-                </option>
-              </select>
+              <input
+                v-model.number="newRegular.payDay"
+                type="number"
+                min="1"
+                max="31"
+                step="1"
+                placeholder="1~31"
+              />
+              <small class="field-hint">29~31일은 해당 월 말일로 자동 적용됩니다.</small>
             </div>
             <div class="field">
               <label>유형</label>
@@ -267,6 +271,13 @@ const newRegular = ref({
 
 const handleAddRegular = async () => {
   if (newRegular.value.amount <= 0) return alert('금액을 입력하세요.');
+  if (
+    !Number.isInteger(Number(newRegular.value.payDay))
+    || Number(newRegular.value.payDay) < 1
+    || Number(newRegular.value.payDay) > 31
+  ) {
+    return alert('결제일은 1일부터 31일 사이로 입력하세요.');
+  }
   try {
     const emoji = ledger.getEmojiByName(newRegular.value.category) || '✨';
     const createdReg = await ledger.addRegular({
@@ -276,7 +287,11 @@ const handleAddRegular = async () => {
     });
 
     const now = new Date();
-    const targetDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(newRegular.value.payDay).padStart(2, '0')}`;
+    const targetDate = ledger.buildRegularTargetDate(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      newRegular.value.payDay,
+    );
 
     await ledger.addTransaction({
       date: targetDate,
@@ -490,6 +505,11 @@ onUnmounted(() => {
   font-size: 13px;
   color: var(--text-sub);
   font-weight: 600;
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--text-sub);
 }
 
 input,
