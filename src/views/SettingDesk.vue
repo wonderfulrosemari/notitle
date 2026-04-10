@@ -52,7 +52,7 @@
       <div class="item-header" @click="toggleMenu('regular')">
         <div class="header-left">
           <span class="icon">📅</span>
-          <span class="label">정기결제(고정 지출) 추가</span>
+          <span class="label">정기결제 관리</span>
         </div>
         <span class="arrow">{{ activeMenu === 'regular' ? '▲' : '▼' }}</span>
       </div>
@@ -93,7 +93,7 @@
               <label>카테고리</label>
               <select v-model="newRegular.category">
                 <option
-                  v-for="cat in ledger.categories"
+                  v-for="cat in regularCategoryOptions"
                   :key="cat.id"
                   :value="cat.name"
                 >
@@ -113,6 +113,66 @@
           <button @click="handleAddRegular" class="solid-btn full-width">
             정기 항목 등록
           </button>
+
+          <div class="settings-group">
+            <p class="section-caption">등록된 정기결제</p>
+
+            <div class="settings-subgroup">
+              <p class="group-caption">지출</p>
+              <div class="regular-tags">
+                <div
+                  v-for="item in expenseRegulars"
+                  :key="item.id"
+                  class="regular-tag"
+                >
+                  <span class="cat-tag-copy">
+                    <span class="badge expense">지출</span>
+                    매월 {{ item.payDay }}일
+                    · {{ item.emoji }} {{ item.category }}
+                    · {{ formatWon(item.amount) }}
+                  </span>
+                  <button
+                    class="del-cat-btn"
+                    type="button"
+                    @click="handleDeleteRegular(item)"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p v-if="expenseRegulars.length === 0" class="helper-text">
+                  등록된 지출 정기결제가 없습니다.
+                </p>
+              </div>
+            </div>
+
+            <div class="settings-subgroup">
+              <p class="group-caption">수입</p>
+              <div class="regular-tags">
+                <div
+                  v-for="item in incomeRegulars"
+                  :key="item.id"
+                  class="regular-tag"
+                >
+                  <span class="cat-tag-copy">
+                    <span class="badge income">수입</span>
+                    매월 {{ item.payDay }}일
+                    · {{ item.emoji }} {{ item.category }}
+                    · {{ formatWon(item.amount) }}
+                  </span>
+                  <button
+                    class="del-cat-btn"
+                    type="button"
+                    @click="handleDeleteRegular(item)"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p v-if="incomeRegulars.length === 0" class="helper-text">
+                  등록된 수입 정기결제가 없습니다.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -155,19 +215,73 @@
             placeholder="새 카테고리 이름"
             @focus="isEmojiPickerOpen = false"
           />
+          <select v-model="newCategory.type" class="category-type-select">
+            <option value="expense">지출</option>
+            <option value="income">수입</option>
+          </select>
           <button @click="handleAddCategory" class="solid-btn">추가</button>
         </div>
 
-        <div class="category-tags" style="margin-top: 15px">
-          <span v-for="cat in ledger.categories" :key="cat.id" class="cat-tag">
-            {{ cat.emoji }} {{ cat.name }}
-            <button
-              class="del-cat-btn"
-              @click="handleDeleteCategory(cat.id, cat.name)"
-            >
-              ✕
-            </button>
-          </span>
+        <div class="settings-group">
+          <div class="settings-subgroup">
+            <p class="group-caption">지출 카테고리</p>
+            <div class="category-tags">
+              <span
+                v-for="cat in expenseCategories"
+                :key="cat.id"
+                class="cat-tag"
+              >
+                {{ cat.emoji }} {{ cat.name }}
+                <button
+                  class="del-cat-btn"
+                  type="button"
+                  @click="handleDeleteCategory(cat.id, cat.name)"
+                >
+                  ✕
+                </button>
+              </span>
+            </div>
+          </div>
+
+          <div class="settings-subgroup">
+            <p class="group-caption">수입 카테고리</p>
+            <div class="category-tags">
+              <span
+                v-for="cat in incomeCategories"
+                :key="cat.id"
+                class="cat-tag"
+              >
+                {{ cat.emoji }} {{ cat.name }}
+                <button
+                  class="del-cat-btn"
+                  type="button"
+                  @click="handleDeleteCategory(cat.id, cat.name)"
+                >
+                  ✕
+                </button>
+              </span>
+            </div>
+          </div>
+
+          <div v-if="commonCategories.length > 0" class="settings-subgroup">
+            <p class="group-caption">공통 카테고리</p>
+            <div class="category-tags">
+              <span
+                v-for="cat in commonCategories"
+                :key="cat.id"
+                class="cat-tag"
+              >
+                {{ cat.emoji || '✨' }} {{ cat.name }}
+                <button
+                  class="del-cat-btn"
+                  type="button"
+                  @click="handleDeleteCategory(cat.id, cat.name)"
+                >
+                  ✕
+                </button>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -269,6 +383,48 @@ const newRegular = ref({
   memo: '',
 });
 
+const regularCategoryOptions = computed(() =>
+  ledger.getCategoriesByType(newRegular.value.type),
+);
+
+const expenseRegulars = computed(() =>
+  ledger.regulars.filter((item) => item.type === 'expense'),
+);
+
+const incomeRegulars = computed(() =>
+  ledger.regulars.filter((item) => item.type === 'income'),
+);
+
+const expenseCategories = computed(() =>
+  ledger.categories.filter((item) => item.type === 'expense'),
+);
+
+const incomeCategories = computed(() =>
+  ledger.categories.filter((item) => item.type === 'income'),
+);
+
+const commonCategories = computed(() =>
+  ledger.categories.filter((item) => item.type === 'common'),
+);
+
+const syncRegularCategory = () => {
+  if (regularCategoryOptions.value.length === 0) {
+    newRegular.value.category = '';
+    return;
+  }
+
+  const hasCurrent = regularCategoryOptions.value.some(
+    (item) => item.name === newRegular.value.category,
+  );
+
+  if (!hasCurrent) {
+    newRegular.value.category = regularCategoryOptions.value[0].name;
+  }
+};
+
+const formatWon = (value) =>
+  `${new Intl.NumberFormat('ko-KR').format(Number(value || 0))}원`;
+
 const handleAddRegular = async () => {
   if (newRegular.value.amount <= 0) return alert('금액을 입력하세요.');
   if (
@@ -279,7 +435,9 @@ const handleAddRegular = async () => {
     return alert('결제일은 1일부터 31일 사이로 입력하세요.');
   }
   try {
-    const emoji = ledger.getEmojiByName(newRegular.value.category) || '✨';
+    const emoji =
+      ledger.getEmojiByName(newRegular.value.category, newRegular.value.type)
+      || '✨';
     const createdReg = await ledger.addRegular({
       ...newRegular.value,
       amount: Number(newRegular.value.amount),
@@ -311,7 +469,17 @@ const handleAddRegular = async () => {
   }
 };
 
-const newCategory = ref({ name: '', emoji: '💰' });
+const handleDeleteRegular = async (item) => {
+  if (!confirm(`'${item.category}' 정기결제를 삭제할까요?`)) return;
+
+  try {
+    await ledger.removeRegular(item.id);
+  } catch (error) {
+    alert(error.message || '정기결제 삭제 실패');
+  }
+};
+
+const newCategory = ref({ name: '', emoji: '💰', type: 'expense' });
 const isEmojiPickerOpen = ref(false);
 
 const emojiList = [
@@ -358,10 +526,11 @@ const handleAddCategory = async () => {
     await ledger.addCategory({
       name: newCategory.value.name.trim(),
       emoji: newCategory.value.emoji,
-      type: 'expense',
+      type: newCategory.value.type,
     });
     newCategory.value.name = '';
     newCategory.value.emoji = '💰';
+    newCategory.value.type = 'expense';
   } catch (error) {
     alert('카테고리 추가 실패');
   }
@@ -398,16 +567,22 @@ watch(
   { immediate: true },
 );
 
+watch(
+  regularCategoryOptions,
+  () => {
+    syncRegularCategory();
+  },
+  { immediate: true },
+);
+
 onMounted(async () => {
-  await ledger.fetchCategories();
+  await Promise.all([ledger.fetchCategories(), ledger.fetchRegulars()]);
   if (currentUserId.value) await fetchUserBudget(currentUserId.value);
 
   const savedTheme = localStorage.getItem('app-theme') || 'dark';
   setTheme(savedTheme);
 
-  if (ledger.categories?.length > 0) {
-    newRegular.value.category = ledger.categories[0].name;
-  }
+  syncRegularCategory();
 
   window.addEventListener('click', handleGlobalClick);
 });
@@ -509,6 +684,30 @@ onUnmounted(() => {
 
 .field-hint {
   font-size: 11px;
+  color: var(--text-sub);
+}
+
+.settings-group {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-subgroup {
+  display: grid;
+  gap: 10px;
+}
+
+.section-caption,
+.group-caption {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.helper-text {
+  margin: 0;
+  font-size: 12px;
   color: var(--text-sub);
 }
 
@@ -616,6 +815,10 @@ select:disabled {
   margin-top: 10px;
 }
 
+.category-type-select {
+  flex: 0 0 110px;
+}
+
 .budget-form {
   gap: 16px;
 }
@@ -675,10 +878,15 @@ select:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
   position: relative;
   z-index: 1;
 }
+
+.regular-tags {
+  display: grid;
+  gap: 8px;
+}
+
 .cat-tag {
   display: inline-flex;
   align-items: center;
@@ -687,6 +895,27 @@ select:disabled {
   border-radius: 20px;
   font-size: 13px;
   border: 1px solid var(--border-color);
+}
+
+.regular-tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-sub);
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.cat-tag-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+  color: var(--text-main);
+  font-size: 13px;
 }
 
 .del-cat-btn {

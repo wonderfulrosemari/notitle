@@ -49,8 +49,8 @@
   --calendar-balance-divider: rgba(157, 177, 212, 0.4);
   --calendar-positive-cell-bg: linear-gradient(180deg, #1a3022 0%, #15281c 100%);
   --calendar-positive-cell-ring: #4d8b5f;
-  --calendar-negative-cell-bg: linear-gradient(180deg, #331f27 0%, #28161d 100%);
-  --calendar-negative-cell-ring: #9a5968;
+  --calendar-negative-cell-bg: linear-gradient(180deg, #1b2230 0%, #161d29 100%);
+  --calendar-negative-cell-ring: #51627f;
 }
 
 :root.theme-kb,
@@ -104,8 +104,8 @@ body.theme-kb {
   --calendar-balance-divider: rgba(100, 116, 139, 0.35);
   --calendar-positive-cell-bg: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
   --calendar-positive-cell-ring: #86cc9c;
-  --calendar-negative-cell-bg: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
-  --calendar-negative-cell-ring: #f3a8b8;
+  --calendar-negative-cell-bg: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  --calendar-negative-cell-ring: #c7d2e1;
 }
 
 * {
